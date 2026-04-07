@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AEMT — Asociación Española de Masters de Taekwondo</title>
+<meta name="description" content="La primera asociación nacional del taekwondo Master español. Competición, formación y proyección internacional para practicantes mayores de 35 años.">
+<meta property="og:title" content="AEMT — Asociación Española de Masters de Taekwondo">
+<meta property="og:description" content="Donde la experiencia se convierte en excelencia. Únete a la primera asociación nacional del taekwondo Master español.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@200;300;400;500;600;700;800&family=Playfair+Display:ital,wght@1,400;1,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<!-- CUSTOM CURSOR -->
+<div class="cursor" id="cur"></div>
+<div class="cursor-r" id="curR"></div>
+
+<!-- LOADER -->
+<div id="ldr">
+  <div class="ldr-logo">
+    <div class="ldr-letters">
+      <span>A</span><span>E</span><span>M</span><span>T</span>
+    </div>
+    <div class="ldr-sub">Asociación Española de Masters de Taekwondo</div>
+  </div>
+  <div class="ldr-bar-wrap"><div class="ldr-bar"></div></div>
+</div>
+
+<!-- NAVIGATION -->
+<nav id="nav" class="top">
+  <div class="nav-i">
+    <a href="#hero" class="logo" onclick="ss('hero')">
+      <div class="logo-em">AEMT</div>
+      <div class="logo-wm">
+        <span class="logo-w">AEMT</span>
+        <span class="logo-d">Masters de Taekwondo</span>
+      </div>
+    </a>
+    <div class="nav-c">
+      <a href="#about"      data-sec="about"      onclick="ss('about')">La Asociación</a>
+      <a href="#events"     data-sec="events"     onclick="ss('events')">Eventos</a>
+      <a href="#ranking"    data-sec="ranking"    onclick="ss('ranking')">Ranking</a>
+      <a href="#news"       data-sec="news"       onclick="ss('news')">Noticias</a>
+      <a href="#contact"    data-sec="contact"    onclick="ss('contact')">Contacto</a>
+    </div>
+    <div class="nav-r">
+      <button class="btn-no" onclick="ss('membership')">Hazte Abonado</button>
+      <a class="btn-go" href="admin.html">Panel Directivo</a>
+    </div>
+    <button class="ham" id="ham" onclick="togMob()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+  <div class="mob" id="mob" style="display:none">
+    <a href="#about"      onclick="ss('about');togMob()">La Asociación</a>
+    <a href="#events"     onclick="ss('events');togMob()">Eventos 2026</a>
+    <a href="#ranking"    onclick="ss('ranking');togMob()">Ranking AEMT</a>
+    <a href="#news"       onclick="ss('news');togMob()">Noticias</a>
+    <a href="#contact"    onclick="ss('contact');togMob()">Contacto</a>
+    <a href="admin.html">⚙ Panel Directivo</a>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- HERO -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="hero">
+  <div class="h-bg"></div>
+  <div class="h-grid"></div>
+  <div class="h-line"></div>
+  <canvas id="particles-canvas"></canvas>
+  <div class="h-num">35+</div>
+
+  <div class="h-in">
+    <div>
+      <div class="h-tag">
+        <span class="h-dot"></span>
+        Fundada en Madrid · 2026
+      </div>
+      <h1 class="ht">
+        Donde<br>la experiencia<br>
+        <em>se convierte en</em>
+        <em style="color:white">excelencia</em>
+      </h1>
+      <p class="h-sub">
+        La primera asociación nacional que representa, organiza y proyecta al
+        practicante de taekwondo Master en España.
+        <strong>El fuego no se apaga con los años — aquí, se aviva.</strong>
+      </p>
+      <div class="h-acts">
+        <a class="btn-hp" href="#membership" onclick="ss('membership')">Únete a la AEMT →</a>
+        <a class="btn-hs" href="#events"     onclick="ss('events')">Ver eventos 2026</a>
+      </div>
+      <div class="h-proof">
+        <div>
+          <div class="pn" id="c1">0</div>
+          <div class="pl" id="stat1-lbl">Abonados</div>
+        </div>
+        <div>
+          <div class="pn" id="stat2-num">12</div>
+          <div class="pl" id="stat2-lbl">Eventos 2026</div>
+        </div>
+        <div>
+          <div class="pn" id="stat3-num">3</div>
+          <div class="pl" id="stat3-lbl">Expediciones Int.</div>
+        </div>
+        <div>
+          <div class="pn" id="stat4-num">17</div>
+          <div class="pl" id="stat4-lbl">Comunidades</div>
+        </div>
+      </div>
+    </div>
+    <div class="h-cards" id="hCards"></div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker"><div class="tick-i" id="tick"></div></div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- ABOUT -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="about" class="sec">
+  <div class="cont">
+    <div class="ab-lay">
+      <div class="rev-l">
+        <div class="s-lbl">Quiénes Somos</div>
+        <h2 class="s-ttl">La voz del taekwondo Master en España</h2>
+        <div class="ab-quote">
+          "Ninguna federación cubre al Master. La AEMT existe para eso:
+          competir, crecer y proyectarse al mundo con la experiencia que da la madurez."
+        </div>
+        <div class="ab-feats">
+          <div class="af">
+            <div class="af-ic">🏆</div>
+            <div>
+              <div class="af-ti">Competición de alto nivel</div>
+              <div class="af-bd">Eventos privados con árbitros titulados, sistema electrónico de puntuación y Ranking AEMT propio actualizado mensualmente.</div>
+            </div>
+          </div>
+          <div class="af">
+            <div class="af-ic">🌍</div>
+            <div>
+              <div class="af-ti">Proyección internacional</div>
+              <div class="af-bd">Expediciones organizadas a USA Master Cup, European Masters, Sweden Masters Camp y Asian Open.</div>
+            </div>
+          </div>
+          <div class="af">
+            <div class="af-ic">📚</div>
+            <div>
+              <div class="af-ti">Formación continua</div>
+              <div class="af-bd">Seminarios con maestros internacionales, cursos de certificación y desarrollo personal.</div>
+            </div>
+          </div>
+          <div class="af">
+            <div class="af-ic">❤️</div>
+            <div>
+              <div class="af-ti">Salud y longevidad activa</div>
+              <div class="af-bd">Programas adaptados a la categoría Master combinando rendimiento deportivo y bienestar integral.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rev-r">
+        <div class="ab-card">
+          <div class="ab-flag">🇪🇸 Presidente y Fundador</div>
+          <div class="ab-nm">Eduardo Lozano Moreno</div>
+          <div class="ab-ti">
+            C.N. 6.º Dan de Taekwondo · Campeón Mundial Master 2025 (Taipéi, Taiwán)<br>
+            Director Técnico Club Kyoto Vallecas desde 2009 · Responsable Master FMTaekwondo
+          </div>
+          <div class="ab-bio">
+            Eduardo lleva el taekwondo en el ADN desde los 3 años. En 2025 alcanzó
+            la cima de su carrera en los Juegos Mundiales Master de Taiwán, compitiendo
+            ante 25.000 atletas de 108 países. Fundó el Club Kyoto Vallecas en 2009 y
+            lidera el movimiento Master en Madrid desde entonces.
+          </div>
+          <div class="ab-ac">
+            <div class="ac-i"><div class="ac-n">🥇</div><div class="ac-l">Campeón Mundial Master 2025</div></div>
+            <div class="ac-i"><div class="ac-n">6.º</div><div class="ac-l">Dan Taekwondo</div></div>
+            <div class="ac-i"><div class="ac-n">15+</div><div class="ac-l">Años formando Masters</div></div>
+            <div class="ac-i"><div class="ac-n">2009</div><div class="ac-l">Club Kyoto fundado</div></div>
+          </div>
+          <div class="ab-ps">
+            <div class="ps-lb">Alianzas internacionales</div>
+            <div class="ps-fl">
+              <span class="fp">🇺🇸 USA Masters Team</span>
+              <span class="fp">🇸🇪 Sweden Masters</span>
+              <span class="fp">🌐 IMGA</span>
+              <span class="fp">🌍 World Taekwondo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NATIONS -->
+<div id="nations">
+  <div class="nat-lb">Presencia internacional — Aliados del taekwondo Master mundial</div>
+  <div style="overflow:hidden"><div class="nat-sc" id="natSc"></div></div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- EVENTS -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="events" class="sec">
+  <div class="cont">
+    <div class="ev-hd rev">
+      <div>
+        <div class="s-lbl" style="color:rgba(200,148,42,.8)">Calendario 2026</div>
+        <h2 class="s-ttl li">Próximos eventos</h2>
+      </div>
+      <a class="btn-ev be-o" style="padding:.62rem 1.35rem;font-size:.83rem"
+         href="#" onclick="toast('📅 Calendario completo disponible próximamente')">
+        Ver calendario →
+      </a>
+    </div>
+    <div class="ev-gr rev d1" id="evGr"></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- RANKING -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="ranking" class="sec">
+  <div class="cont rev">
+    <div class="rk-hd" style="flex-direction:column;align-items:flex-start;gap:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div class="s-lbl">Temporada 2026</div>
+          <h2 class="s-ttl">Ranking AEMT</h2>
+          <p class="s-sub" style="margin-bottom:0">
+            Clasificación oficial por puntos. Actualización mensual tras cada evento puntuable.
+          </p>
+        </div>
+      </div>
+      <div id="rkFl" style="width:100%"></div>
+    </div>
+    <div class="rk-card">
+      <table class="rk-t">
+        <thead>
+          <tr>
+            <th style="width:58px">Pos.</th>
+            <th>Deportista</th>
+            <th>Cat.</th>
+            <th>CCAA</th>
+            <th style="text-align:center">Ev.</th>
+            <th>Puntos</th>
+          </tr>
+        </thead>
+        <tbody id="rkBd"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- MEMBERSHIP -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="membership" class="sec">
+  <div class="cont">
+    <div class="mem-lay">
+      <div class="rev-l">
+        <div class="s-lbl" style="color:rgba(200,148,42,.8)">Hazte Abonado</div>
+        <h2 class="s-ttl li">Únete a la comunidad Master</h2>
+        <p style="color:rgba(255,255,255,.58);font-size:.9rem;line-height:1.78;margin-bottom:2.2rem;font-weight:300">
+          Elige tu categoría y forma parte de la primera asociación nacional del taekwondo Master español.
+        </p>
+        <div class="plans" id="planGr"></div>
+      </div>
+
+      <div class="rev-r">
+        <div class="mem-fw">
+          <div class="mf-ti">Solicitud de Adhesión</div>
+          <div class="mf-sb">
+            Completa el formulario y nos pondremos en contacto en menos de 48 horas.
+            Recibirás tu carné AEMT por email.
+          </div>
+
+          <div class="fr">
+            <div class="fg">
+              <label>Nombre *</label>
+              <input type="text" id="f-nombre" placeholder="Tu nombre">
+            </div>
+            <div class="fg">
+              <label>Apellidos *</label>
+              <input type="text" id="f-apellidos" placeholder="Apellidos">
+            </div>
+          </div>
+          <div class="fg">
+            <label>Email *</label>
+            <input type="email" id="f-email" placeholder="correo@ejemplo.com">
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label>Teléfono</label>
+              <input type="tel" id="f-tel" placeholder="+34 600 000 000">
+            </div>
+            <div class="fg">
+              <label>Comunidad Autónoma *</label>
+              <select id="f-ccaa">
+                <option value="">Selecciona...</option>
+                <option>Andalucía</option><option>Aragón</option><option>Asturias</option>
+                <option>Baleares</option><option>Canarias</option><option>Cantabria</option>
+                <option>Castilla-La Mancha</option><option>Castilla y León</option>
+                <option>Cataluña</option><option>Extremadura</option><option>Galicia</option>
+                <option>La Rioja</option><option selected>Madrid</option><option>Murcia</option>
+                <option>Navarra</option><option>País Vasco</option><option>Valencia</option>
+              </select>
+            </div>
+          </div>
+          <div class="fr">
+            <div class="fg">
+              <label>Tipo de abono *</label>
+              <select id="f-plan">
+                <option value="estandar">Estándar — 60 €/año</option>
+                <option value="joven">Joven (14-25) — 60 €/año</option>
+                <option value="colaborador">Colaborador — 60 €/año</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Grado (opcional)</label>
+              <input type="text" id="f-grado" placeholder="Ej: 3.º Dan">
+            </div>
+          </div>
+
+          <div class="fck">
+            <input type="checkbox" id="ckp">
+            <label for="ckp">He leído y acepto la <a href="#" onclick="openLegalModal('privacidad');return false;">política de privacidad</a> y los
+              <a href="#" onclick="openLegalModal('estatutos');return false;">Estatutos AEMT</a>. Consiento el tratamiento de mis datos conforme al
+              RGPD (UE) 2016/679.</label>
+          </div>
+          <div class="fck">
+            <input type="checkbox" id="cki">
+            <label for="cki">Consiento el uso de mi imagen en materiales de comunicación de la AEMT
+              (fotografías y vídeos de eventos).</label>
+          </div>
+
+          <button class="fsb" id="btn-mem" onclick="subMem()">
+            Enviar Solicitud de Adhesión
+          </button>
+          <p id="form-msg"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- GALLERY -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="gallery">
+  <div class="cont rev">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem">
+      <div>
+        <div class="s-lbl" style="color:rgba(200,148,42,.7)">Galería</div>
+        <h2 class="s-ttl li">AEMT en acción</h2>
+      </div>
+      <a class="btn-ev be-o" href="#" onclick="toast('📸 Galería completa en @aemt_es')">Ver Instagram →</a>
+    </div>
+    <div class="gal-gr">
+      <div class="gi" style="background:linear-gradient(135deg,#1B3A6B,#2a5298)">
+        <div class="gi-in">🏆<div class="gi-ov"><span class="gi-cp">Juegos Mundiales Master · Taiwán 2025</span></div></div>
+      </div>
+      <div class="gi" style="background:linear-gradient(135deg,#0D1E38,#1B3A6B)">
+        <div class="gi-in">🥋<div class="gi-ov"><span class="gi-cp">Club Kyoto Vallecas · Madrid</span></div></div>
+      </div>
+      <div class="gi" style="background:linear-gradient(135deg,#243f76,#1B3A6B)">
+        <div class="gi-in">🌍<div class="gi-ov"><span class="gi-cp">European Masters Championships</span></div></div>
+      </div>
+      <div class="gi" style="background:linear-gradient(135deg,#13233F,#243f76)">
+        <div class="gi-in">🎖️<div class="gi-ov"><span class="gi-cp">Ceremonia de entrega de medallas</span></div></div>
+      </div>
+      <div class="gi" style="background:linear-gradient(135deg,#1B3A6B,#0D1E38)">
+        <div class="gi-in">👥<div class="gi-ov"><span class="gi-cp">Equipo AEMT · Madrid 2026</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SPONSORS -->
+<section id="sponsors">
+  <div class="cont">
+    <div class="sp-ti">Patrocinadores y colaboradores — Forma parte del proyecto AEMT</div>
+    <div class="sp-gr" id="spGr"></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- NEWS -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="news" class="sec">
+  <div class="cont rev">
+    <div class="s-lbl">Actualidad</div>
+    <h2 class="s-ttl">Noticias AEMT</h2>
+    <p class="s-sub">Las últimas novedades del taekwondo Master en España y el mundo.</p>
+    <div class="nw-gr" id="nwGr"></div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- CONTACT -->
+<!-- ════════════════════════════════════════════════════════ -->
+<section id="contact" class="sec">
+  <div class="cont">
+    <div class="ct-lay">
+      <div class="rev-l">
+        <div class="s-lbl" style="color:rgba(200,148,42,.75)">Contacto</div>
+        <h3>¿Hablamos?</h3>
+        <p>Estamos aquí para resolver cualquier duda sobre la AEMT,
+           nuestros eventos, expediciones o el proceso de adhesión.</p>
+        <div class="ct-its">
+          <div class="ct-it">
+            <div class="ct-ic">📍</div>
+            <div>
+              <div class="ct-lb">Domicilio Social</div>
+              <div class="ct-vl" id="ct-dir-lbl">C/ Alcalá de Guadaira, 10, Local 1<br>28018 Madrid</div>
+            </div>
+          </div>
+          <div class="ct-it">
+            <div class="ct-ic">📧</div>
+            <div>
+              <div class="ct-lb">Email oficial</div>
+              <div class="ct-vl" id="ct-email-lbl">info@aemt.es</div>
+            </div>
+          </div>
+          <div class="ct-it">
+            <div class="ct-ic">📱</div>
+            <div>
+              <div class="ct-lb">Teléfono</div>
+              <div class="ct-vl" id="ct-tel-lbl">+34 625 59 39 98</div>
+            </div>
+          </div>
+          <div class="ct-it">
+            <div class="ct-ic">🏛️</div>
+            <div>
+              <div class="ct-lb">Registro</div>
+              <div class="ct-vl">RNA — Ministerio del Interior<br>Inscripción en trámite · 2026</div>
+            </div>
+          </div>
+          <div class="ct-it">
+            <div class="ct-ic">⏰</div>
+            <div>
+              <div class="ct-lb">Respuesta</div>
+              <div class="ct-vl">Menos de 48 horas hábiles</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rev-r">
+        <div class="ct-fr">
+          <div class="fr">
+            <div class="fg">
+              <label>Nombre</label>
+              <input type="text" id="ct-nombre" placeholder="Nombre y apellidos">
+            </div>
+            <div class="fg">
+              <label>Email</label>
+              <input type="email" id="ct-email" placeholder="tu@email.com">
+            </div>
+          </div>
+          <div class="fg">
+            <label>Asunto</label>
+            <select id="ct-asunto">
+              <option>Información sobre adhesión</option>
+              <option>Inscripción en evento</option>
+              <option>Expedición internacional</option>
+              <option>Patrocinio o colaboración</option>
+              <option>Medios de comunicación</option>
+              <option>Otra consulta</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Mensaje</label>
+            <textarea id="ct-mensaje" placeholder="Escribe aquí tu consulta..."></textarea>
+          </div>
+          <button class="ct-sb" id="btn-contact" onclick="subContact()">Enviar Mensaje</button>
+          <p id="ct-msg"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- FOOTER -->
+<!-- ════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="cont">
+    <div class="ft-gr">
+      <div class="ft-br">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="background:linear-gradient(135deg,var(--g),var(--gl));border-radius:8px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:1rem;color:var(--nd)">AE</div>
+          <span style="font-family:'Bebas Neue';font-size:1.25rem;color:white;letter-spacing:2px">AEMT</span>
+        </div>
+        <div class="ft-tg">"Donde la experiencia se convierte en excelencia"</div>
+        <div class="ft-ds">
+          Asociación Española de Masters de Taekwondo. Entidad sin ánimo de lucro
+          · RNA — Min. del Interior. C/ Alcalá de Guadaira, 10, 28018 Madrid.
+        </div>
+        <div class="ft-sc">
+          <a class="fsc" title="Instagram">📸</a>
+          <a class="fsc" title="Facebook">👥</a>
+          <a class="fsc" title="YouTube">▶️</a>
+          <a class="fsc" title="X">𝕏</a>
+          <a class="fsc" title="WhatsApp">💬</a>
+        </div>
+      </div>
+
+      <div class="fc">
+        <div class="fc-ti">Navegación</div>
+        <ul>
+          <li><a href="#" onclick="ss('about')">La Asociación</a></li>
+          <li><a href="#" onclick="ss('events')">Eventos 2026</a></li>
+          <li><a href="#" onclick="ss('ranking')">Ranking AEMT</a></li>
+          <li><a href="#" onclick="ss('membership')">Hazte Abonado</a></li>
+          <li><a href="#" onclick="ss('news')">Noticias</a></li>
+          <li><a href="#" onclick="ss('contact')">Contacto</a></li>
+        </ul>
+      </div>
+
+      <div class="fc">
+        <div class="fc-ti">Legal</div>
+        <ul>
+          <li><a href="#" onclick="openLegalModal('aviso');return false;">Aviso Legal</a></li>
+          <li><a href="#" onclick="openLegalModal('privacidad');return false;">Política de Privacidad</a></li>
+          <li><a href="#" onclick="openLegalModal('cookies');return false;">Política de Cookies</a></li>
+          <li><a href="#" onclick="openLegalModal('estatutos');return false;">Estatutos AEMT</a></li>
+          <li><a href="#" onclick="openLegalModal('reglamento');return false;">Reglamento Interno</a></li>
+          <li><a href="#" onclick="openLegalModal('transparencia');return false;">Transparencia</a></li>
+        </ul>
+      </div>
+
+      <div class="fc">
+        <div class="fc-ti">Internacional</div>
+        <ul>
+          <li><a href="https://usamastersteam.org" target="_blank" rel="noopener">USA Masters Team</a></li>
+          <li><a href="https://www.swedenmasters.com" target="_blank" rel="noopener">Sweden Masters</a></li>
+          <li><a href="https://imga.org" target="_blank" rel="noopener">IMGA</a></li>
+          <li><a href="https://worldtaekwondo.org" target="_blank" rel="noopener">World Taekwondo</a></li>
+          <li><a href="admin.html">Acceso Directivos</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ft-bt">
+      <p id="footer-copy">© 2026 AEMT — Asociación Española de Masters de Taekwondo. Todos los derechos reservados.</p>
+      <div class="ft-lg">
+        <a href="#" onclick="openLegalModal('aviso');return false;">Aviso Legal</a>
+        <a href="#" onclick="openLegalModal('privacidad');return false;">Privacidad</a>
+        <a href="#" onclick="openLegalModal('cookies');return false;">Cookies</a>
+        <a href="#" onclick="openLegalModal('transparencia');return false;">Transparencia</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="m-bg" onclick="closeModal()"></div>
+  <div class="m-bx">
+    <button class="m-cl" onclick="closeModal()">✕</button>
+    <div id="mCt"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ── SCRIPTS ──────────────────────────────────────────── -->
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- AEMT scripts -->
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/particles.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

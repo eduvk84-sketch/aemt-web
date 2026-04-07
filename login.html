@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AEMT — Acceso Directivos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --n:#1B3A6B;--nd:#0D1E38;--nm:#243f76;
+  --g:#C8942A;--gl:#E8B84B;--gd:#9B6E1A;
+  --w:#FFFFFF;--of:#F6F8FC;--gr:#5A6B7B;--bd:#DDE3EE;
+  --red:#C0392B;--grn:#1A6B3A;
+}
+html,body{height:100%}
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--nd);
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;
+  position:relative;overflow:hidden;
+}
+
+/* Background layers */
+.bg-grad{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 30%,rgba(200,148,42,.07) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 80% at 10% 80%,rgba(42,82,152,.2) 0%,transparent 50%),
+    linear-gradient(135deg,var(--nd) 0%,#13233F 50%,#0D1E38 100%);
+}
+.bg-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(200,148,42,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(200,148,42,.035) 1px,transparent 1px);
+  background-size:80px 80px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 70%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 0%,transparent 70%);
+}
+canvas#lc{position:absolute;inset:0;pointer-events:none}
+
+/* Card */
+.login-wrap{
+  position:relative;z-index:2;
+  width:100%;max-width:420px;
+  padding:1.5rem;
+}
+.login-card{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:24px;
+  padding:2.8rem 2.4rem;
+  backdrop-filter:blur(20px) saturate(1.4);
+  -webkit-backdrop-filter:blur(20px) saturate(1.4);
+  box-shadow:0 32px 80px rgba(0,0,0,.5);
+}
+
+/* Header */
+.lc-logo{display:flex;align-items:center;gap:12px;margin-bottom:2.2rem;justify-content:center}
+.lc-ic{
+  width:52px;height:52px;
+  background:linear-gradient(135deg,var(--g),var(--gl));
+  border-radius:13px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue';font-size:1.3rem;color:var(--nd);
+  box-shadow:0 6px 20px rgba(200,148,42,.4);
+}
+.lc-txt{}
+.lc-name{font-family:'Bebas Neue';font-size:1.5rem;color:white;letter-spacing:3px}
+.lc-sub{font-size:.55rem;color:rgba(255,255,255,.3);letter-spacing:3px;text-transform:uppercase;margin-top:2px}
+
+.lc-title{font-family:'Bebas Neue';font-size:2rem;color:white;text-align:center;margin-bottom:.4rem}
+.lc-desc{font-size:.8rem;color:rgba(255,255,255,.42);text-align:center;margin-bottom:2rem;line-height:1.55}
+
+/* Form */
+.fg{margin-bottom:1rem}
+.fg label{display:block;font-size:.68rem;font-weight:700;color:rgba(255,255,255,.45);margin-bottom:.4rem;letter-spacing:.8px;text-transform:uppercase}
+.fg input{
+  width:100%;padding:.72rem 1.05rem;
+  background:rgba(255,255,255,.07);
+  border:1.5px solid rgba(255,255,255,.12);
+  border-radius:10px;
+  font-size:.9rem;font-family:'Outfit';color:white;
+  outline:none;transition:all .2s;
+}
+.fg input::placeholder{color:rgba(255,255,255,.22)}
+.fg input:focus{border-color:rgba(200,148,42,.45);box-shadow:0 0 0 3px rgba(200,148,42,.1)}
+
+.btn-login{
+  width:100%;padding:.9rem;
+  background:linear-gradient(135deg,var(--g),var(--gl));
+  color:var(--nd);border:none;border-radius:11px;
+  font-size:.92rem;font-weight:800;
+  cursor:pointer;font-family:'Outfit';
+  transition:all .25s;
+  box-shadow:0 6px 22px rgba(200,148,42,.35);
+  margin-top:.5rem;
+}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(200,148,42,.48)}
+.btn-login:active{transform:translateY(0)}
+.btn-login:disabled{opacity:.6;cursor:not-allowed;transform:none}
+
+.login-err{
+  margin-top:.9rem;padding:.75rem 1rem;
+  background:rgba(192,57,43,.12);
+  border:1px solid rgba(192,57,43,.25);
+  border-radius:9px;
+  font-size:.8rem;color:#fca5a5;
+  text-align:center;
+  display:none;
+}
+.login-err.show{display:block}
+
+.back-link{
+  display:flex;align-items:center;justify-content:center;gap:.4rem;
+  margin-top:1.6rem;
+  color:rgba(255,255,255,.3);
+  font-size:.77rem;text-decoration:none;
+  transition:color .2s;
+}
+.back-link:hover{color:rgba(200,148,42,.8)}
+
+/* Founders footer */
+.founders{
+  margin-top:2rem;padding-top:1.4rem;
+  border-top:1px solid rgba(255,255,255,.07);
+}
+.founders-lbl{font-size:.55rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.18);margin-bottom:.75rem;text-align:center}
+.founders-row{display:flex;justify-content:center;gap:1.1rem;flex-wrap:wrap}
+.founder-av{
+  display:flex;flex-direction:column;align-items:center;gap:.3rem;
+}
+.fav-ic{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--nm),rgba(200,148,42,.6));
+  display:flex;align-items:center;justify-content:center;
+  font-size:.68rem;font-weight:800;color:white;
+}
+.fav-nm{font-size:.6rem;color:rgba(255,255,255,.3);text-align:center;line-height:1.3}
+
+/* Demo notice */
+.demo-notice{
+  position:absolute;bottom:1.5rem;left:50%;transform:translateX(-50%);
+  background:rgba(200,148,42,.1);border:1px solid rgba(200,148,42,.2);
+  border-radius:100px;padding:.35rem 1rem;
+  font-size:.65rem;color:rgba(232,184,75,.7);
+  letter-spacing:1px;text-align:center;white-space:nowrap;
+}
+
+/* Toast */
+.toast{position:fixed;bottom:2rem;right:2rem;background:rgba(13,30,56,.96);color:white;padding:.9rem 1.4rem;border-radius:11px;font-size:.85rem;font-weight:600;z-index:9999;transform:translateY(100px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);box-shadow:0 12px 40px rgba(0,0,0,.4);border-left:3px solid var(--g);max-width:340px}
+.toast.show{transform:translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<div class="bg-grad"></div>
+<div class="bg-grid"></div>
+<canvas id="lc"></canvas>
+
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="lc-logo">
+      <div class="lc-ic">AEMT</div>
+      <div class="lc-txt">
+        <div class="lc-name">AEMT</div>
+        <div class="lc-sub">Panel Directivo</div>
+      </div>
+    </div>
+
+    <div class="lc-title">Acceso Directivos</div>
+    <div class="lc-desc">
+      Área privada de la Junta Directiva de la<br>
+      Asociación Española de Masters de Taekwondo
+    </div>
+
+    <div class="fg">
+      <label>Email</label>
+      <input type="email" id="l-email" placeholder="tu@aemt.es" autocomplete="email">
+    </div>
+    <div class="fg">
+      <label>Contraseña</label>
+      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <button class="btn-login" id="btn-login" onclick="doLogin()">
+      Entrar al Panel
+    </button>
+
+    <div class="login-err" id="login-err">
+      Email o contraseña incorrectos. Contacta al administrador del sistema.
+    </div>
+
+    <a class="back-link" href="index.html">← Volver al sitio web</a>
+
+    <div class="founders">
+      <div class="founders-lbl">Socios Fundadores</div>
+      <div class="founders-row">
+        <div class="founder-av"><div class="fav-ic">EL</div><div class="fav-nm">Eduardo<br>Lozano</div></div>
+        <div class="founder-av"><div class="fav-ic">TM</div><div class="fav-nm">Tatiana<br>Martín</div></div>
+        <div class="founder-av"><div class="fav-ic">ML</div><div class="fav-nm">M.ª Luisa<br>Lozano</div></div>
+        <div class="founder-av"><div class="fav-ic">FL</div><div class="fav-nm">Francisco<br>Lozano</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="demo-notice" id="demoNotice"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script>
+// Particles (mini version for login page)
+(function(){
+  const canvas=document.getElementById('lc');
+  const ctx=canvas.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+  function Pt(){this.x=Math.random()*W;this.y=Math.random()*H;this.vx=(Math.random()-.5)*.3;this.vy=(Math.random()-.5)*.3;this.r=1+Math.random()*1.5}
+  function init(){pts=[];for(let i=0;i<45;i++)pts.push(new Pt());}
+  function loop(){
+    ctx.clearRect(0,0,W,H);
+    for(let i=0;i<pts.length;i++){
+      let p=pts[i];p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle='rgba(200,148,42,.2)';ctx.fill();
+      for(let j=i+1;j<pts.length;j++){
+        let q=pts[j],dx=p.x-q.x,dy=p.y-q.y,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<110){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.strokeStyle='rgba(200,148,42,'+(1-d/110)*.15+')';ctx.lineWidth=.7;ctx.stroke();}
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+  resize();init();loop();
+  window.addEventListener('resize',()=>{resize();init();});
+})();
+
+// Check if already logged in
+window.addEventListener('DOMContentLoaded', async () => {
+  const isPlaceholder = SUPABASE_URL.includes('TU_PROYECTO');
+  const notice = document.getElementById('demoNotice');
+
+  if (isPlaceholder) {
+    notice.textContent = '⚡ Modo demo — usa cualquier email/contraseña';
+  } else {
+    const session = await authGetSession();
+    if (session) window.location.href = 'admin.html';
+  }
+
+  // Enter key to login
+  document.getElementById('l-pass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+});
+
+async function doLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const btn   = document.getElementById('btn-login');
+  const err   = document.getElementById('login-err');
+
+  err.classList.remove('show');
+
+  if (!email || !pass) {
+    err.textContent = 'Introduce tu email y contraseña.';
+    err.classList.add('show');
+    return;
+  }
+
+  btn.textContent = 'Verificando...'; btn.disabled = true;
+
+  const isPlaceholder = SUPABASE_URL.includes('TU_PROYECTO');
+
+  if (isPlaceholder) {
+    // Demo mode: any credentials work
+    await new Promise(r => setTimeout(r, 900));
+    window.location.href = 'admin.html';
+    return;
+  }
+
+  const { data, error } = await authLogin(email, pass);
+
+  btn.textContent = 'Entrar al Panel'; btn.disabled = false;
+
+  if (error) {
+    err.textContent = 'Email o contraseña incorrectos.';
+    err.classList.add('show');
+  } else {
+    window.location.href = 'admin.html';
+  }
+}
+</script>
+</body>
+</html>

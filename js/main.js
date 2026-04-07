@@ -1,0 +1,739 @@
+// ============================================================
+// AEMT — js/main.js
+// Public site logic: render, scroll, interactions
+// ============================================================
+'use strict';
+
+// ── UTILS ──────────────────────────────────────────────────
+function q(sel, ctx = document) { return ctx.querySelector(sel); }
+function qq(sel, ctx = document) { return [...ctx.querySelectorAll(sel)]; }
+
+function toast(msg, duration = 4000) {
+  const t = q('#toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  const months = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+  return {
+    day:   String(d.getDate()).padStart(2,'0'),
+    month: months[d.getMonth()],
+    full:  d.toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' }),
+  };
+}
+
+// ── COUNTER ANIMATION ─────────────────────────────────────
+function animCounter(el, target, dur = 1800) {
+  let start = null;
+  const step = ts => {
+    if (!start) start = ts;
+    const progress = Math.min((ts - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.floor(ease * target);
+    if (progress < 1) requestAnimationFrame(step);
+    else el.textContent = target;
+  };
+  requestAnimationFrame(step);
+}
+
+// ── RIPPLE EFFECT ─────────────────────────────────────────
+function addRipple(e) {
+  const btn = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const x = e.clientX - rect.left - size / 2;
+  const y = e.clientY - rect.top  - size / 2;
+  const ripple = document.createElement('span');
+  ripple.classList.add('ripple');
+  ripple.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
+  btn.style.position = 'relative';
+  btn.style.overflow = 'hidden';
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 700);
+}
+// Ripple listeners attached after DOM render (see init())
+
+// ── CUSTOM CURSOR ─────────────────────────────────────────
+const cur  = q('#cur');
+const curR = q('#curR');
+if (cur && curR) {
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cur.style.left = mx + 'px';
+    cur.style.top  = my + 'px';
+  });
+  (function loop() {
+    rx += (mx - rx) * .12;
+    ry += (my - ry) * .12;
+    curR.style.left = rx + 'px';
+    curR.style.top  = ry + 'px';
+    requestAnimationFrame(loop);
+  })();
+}
+
+// ── NAVIGATION ────────────────────────────────────────────
+const nav = q('#nav');
+const SECTIONS = ['hero','about','events','ranking','membership','news','contact'];
+
+function updateNav() {
+  const scrolled = window.scrollY > 55;
+  nav.className = scrolled ? 'scrolled' : 'top';
+  let current = 'hero';
+  SECTIONS.forEach(id => {
+    const el = q('#' + id);
+    if (el && window.scrollY >= el.offsetTop - 80) current = id;
+  });
+  qq('.nav-c a').forEach(a => a.classList.toggle('act', a.dataset.sec === current));
+}
+
+window.addEventListener('scroll', updateNav, { passive: true });
+
+function scrollTo(id) {
+  const el = q('#' + id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+window.ss = scrollTo; // alias used in HTML
+
+function togMob() {
+  const mob = q('#mob');
+  mob.style.display = mob.style.display === 'flex' ? 'none' : 'flex';
+}
+window.togMob = togMob;
+
+// ── SCROLL REVEAL ─────────────────────────────────────────
+const revObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold: .07 });
+
+function observeReveal() {
+  qq('.rev, .rev-l, .rev-r').forEach(el => revObs.observe(el));
+}
+
+// ── PORTADA CONFIG ────────────────────────────────────────
+const LS_PORTADA = 'aemt_portada';
+const DEFAULT_PORTADA = {
+  hero_titulo:    'ASOCIACIÓN ESPAÑOLA DE TAEKWONDO MASTERS',
+  hero_subtitulo: 'La élite del Taekwondo por encima de los 35 años. Competición, hermandad y excelencia.',
+  hero_badge:     'Fundada en Madrid · 2026',
+  ticker:         ['AEMT Open Madrid · 15 Marzo','USA Master Cup · Junio','European Masters · Septiembre','Summer Camp · Agosto','Liga AEMT · 7 Jornadas','Gran Final · Diciembre','Únete · aemt.es'],
+  about_titulo:   'Somos la nueva referencia del Taekwondo Master en España',
+  about_texto:    'Nace para dar estructura, visibilidad y oportunidades a los practicantes de taekwondo mayores de 35 años. Un espacio donde la experiencia y la competición se fusionan.',
+  stat1_num: 47,  stat1_lbl: 'Abonados',
+  stat2_num: 7,   stat2_lbl: 'Eventos 2026',
+  stat3_num: 5,   stat3_lbl: 'CC.AA.',
+  stat4_num: 108, stat4_lbl: 'Países en IMGA',
+  contacto_email: 'info@aemt.es',
+  contacto_tel:   '+34 625 59 39 98',
+  contacto_dir:   'Madrid, España',
+  footer_texto:   '© 2026 Asociación Española de Taekwondo Masters (AEMT). Todos los derechos reservados.',
+};
+
+function loadPortada() {
+  try {
+    const raw = localStorage.getItem(LS_PORTADA);
+    return raw ? { ...DEFAULT_PORTADA, ...JSON.parse(raw) } : { ...DEFAULT_PORTADA };
+  } catch { return { ...DEFAULT_PORTADA }; }
+}
+
+function applyPortada() {
+  const p = loadPortada();
+
+  // Hero badge
+  const hTag = q('.h-tag');
+  if (hTag) {
+    // preserve the dot span, replace only the text node
+    const dot = hTag.querySelector('.h-dot');
+    hTag.textContent = p.hero_badge;
+    if (dot) hTag.prepend(dot);
+  }
+  // Hero subtitle (h-sub paragraph)
+  const hSub = q('.h-sub');
+  if (hSub) hSub.innerHTML = p.hero_subtitulo;
+
+  // About title + text
+  const abTi = q('#about .s-ttl');
+  if (abTi) abTi.textContent = p.about_titulo;
+  const abTx = q('#about .ab-quote');
+  if (abTx) abTx.textContent = p.about_texto;
+
+  // Stats labels (nums are driven by animCounter from fetchAbonadosCount — only update label text)
+  [2,3,4].forEach(i => {
+    const numEl = q(`#stat${i}-num`);
+    const lblEl = q(`#stat${i}-lbl`);
+    if (numEl) numEl.textContent = p[`stat${i}_num`];
+    if (lblEl) lblEl.textContent = p[`stat${i}_lbl`];
+  });
+  const lbl1 = q('#stat1-lbl');
+  if (lbl1) lbl1.textContent = p.stat1_lbl;
+
+  // Contact
+  const ctEm  = q('#ct-email-lbl');  if (ctEm)  ctEm.textContent  = p.contacto_email;
+  const ctTel = q('#ct-tel-lbl');    if (ctTel) ctTel.textContent  = p.contacto_tel;
+  const ctDir = q('#ct-dir-lbl');    if (ctDir) ctDir.textContent  = p.contacto_dir;
+
+  // Footer
+  const ftTx = q('#footer-copy');    if (ftTx)  ftTx.textContent  = p.footer_texto;
+}
+
+// ── RENDER TICKER ─────────────────────────────────────────
+function renderTicker() {
+  const p = loadPortada();
+  const items = p.ticker;
+  const tick = q('#tick');
+  if (!tick) return;
+  tick.innerHTML = [...items, ...items].map(i => `<span class="tick-it">${i}</span>`).join('');
+}
+
+// ── RENDER NATIONS ────────────────────────────────────────
+function renderNations() {
+  const sc = q('#natSc');
+  if (!sc) return;
+  const doubled = [...NATIONS, ...NATIONS];
+  sc.innerHTML = doubled.map(n => `<div class="nat-it"><span class="nat-fl">${n.f}</span>${n.n}</div>`).join('');
+}
+
+// ── RENDER HERO CARDS ─────────────────────────────────────
+function renderHeroCards(events) {
+  const container = q('#hCards');
+  if (!container) return;
+  const featured = events.slice(0, 3);
+  const tmap = { campeonato:'bc', expedicion:'be', seminario:'bs', social:'bs' };
+  const lmap = { campeonato:'Torneo', expedicion:'Expedición', seminario:'Seminario', social:'Social' };
+  container.innerHTML = featured.map(e => {
+    const d = formatDate(e.fecha);
+    const pct = Math.round((e.plazas_ocupadas / e.plazas_total) * 100);
+    const badge = tmap[e.tipo] || 'bc';
+    const label = lmap[e.tipo] || e.tipo;
+    return `<div class="hc">
+      <div class="hc-top">
+        <span>${e.tipo === 'campeonato' ? '🏆' : e.tipo === 'expedicion' ? '🌍' : '🥋'}</span>
+        <span class="hc-badge ${badge}">${label}</span>
+      </div>
+      <div class="hc-title">${e.titulo}</div>
+      <div class="hc-detail">${d.full} · ${e.plazas_total} plazas</div>
+      <div class="hc-bar"><div class="hc-fill" data-w="${pct}%" style="width:0"></div></div>
+    </div>`;
+  }).join('');
+  // Animate bars after brief delay
+  setTimeout(() => {
+    qq('.hc-fill').forEach(b => { b.style.width = b.dataset.w; });
+  }, 400);
+}
+
+// ── RENDER EVENTS ─────────────────────────────────────────
+function renderEvents(events) {
+  const grid = q('#evGr');
+  if (!grid) return;
+  const tmap = { campeonato:'ebt', expedicion:'ebe', seminario:'ebs', social:'ebg', liga:'ebl' };
+  const lmap = { campeonato:'Torneo', expedicion:'Expedición', seminario:'Seminario', social:'Gala', liga:'Liga' };
+  grid.innerHTML = events.map(e => {
+    const d = formatDate(e.fecha);
+    const pct = Math.round((e.plazas_ocupadas / e.plazas_total) * 100);
+    const tclass = tmap[e.tipo] || 'ebt';
+    const tlabel = lmap[e.tipo] || e.tipo;
+    const btnHtml = e.inscripciones_abiertas
+      ? `<button class="btn-ev be-g" onclick="openEventModal(${JSON.stringify(e.titulo).replace(/"/g,"'")},${JSON.stringify(e.lugar).replace(/"/g,"'")})">Inscribirme</button>`
+      : `<span style="font-size:.7rem;color:rgba(255,255,255,.3);font-weight:600">Próximamente</span>`;
+    return `<div class="evc${e.destacado ? ' feat' : ''}">
+      <div class="ev-tp">
+        <div class="ev-dt"><div class="ev-dy">${d.day}</div><div class="ev-mn">${d.month}</div></div>
+        <div>
+          <span class="ev-bd2 ${tclass}">${tlabel}</span>
+          <div class="ev-ti">${e.titulo}</div>
+        </div>
+      </div>
+      <div class="ev-by">
+        <div class="ev-lc">📍 ${e.lugar}</div>
+        <div class="ev-bm">
+          <div class="ev-sp">
+            <div class="ev-st">Inscritos: <span>${e.plazas_ocupadas}/${e.plazas_total}</span></div>
+            <div class="ev-sb"><div class="ev-sf" style="width:${pct}%"></div></div>
+          </div>
+          ${btnHtml}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── RENDER RANKING ────────────────────────────────────────
+let _rankingData = [];
+const _rkF = { sexo:'all', cat:'all', nivel:'all' };
+
+function _loadRkConfig() {
+  try {
+    const raw = localStorage.getItem('aemt_puntos_config');
+    const cfg = raw ? JSON.parse(raw) : null;
+    const defCats = [
+      {id:'M35',label:'M+35',sexo:'M'},{id:'M40',label:'M+40',sexo:'M'},{id:'M45',label:'M+45',sexo:'M'},
+      {id:'M50',label:'M+50',sexo:'M'},{id:'M55',label:'M+55',sexo:'M'},{id:'M60',label:'M+60',sexo:'M'},
+      {id:'F35',label:'F+35',sexo:'F'},{id:'F40',label:'F+40',sexo:'F'},{id:'F45',label:'F+45',sexo:'F'},
+      {id:'F50',label:'F+50',sexo:'F'},{id:'F55',label:'F+55',sexo:'F'},{id:'F60',label:'F+60',sexo:'F'},
+    ];
+    const defNiveles = [{id:'competitivo',label:'Competitivo'},{id:'recreativo',label:'Recreativo'}];
+    return {
+      categorias_edad: (cfg && cfg.categorias_edad) || defCats,
+      niveles: (cfg && cfg.niveles) || defNiveles,
+    };
+  } catch { return { categorias_edad:[], niveles:[] }; }
+}
+
+function renderRankingFilters() {
+  const filters = q('#rkFl');
+  if (!filters) return;
+  const { categorias_edad, niveles } = _loadRkConfig();
+
+  // Group cats by sex
+  const mCats = categorias_edad.filter(c => c.sexo === 'M');
+  const fCats = categorias_edad.filter(c => c.sexo === 'F');
+
+  filters.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.5rem;align-items:center">
+      <span style="font-size:.62rem;font-weight:800;color:var(--gr);letter-spacing:.7px;text-transform:uppercase;min-width:40px">Sexo</span>
+      <button class="rf${_rkF.sexo==='all'?' act':''}" onclick="rkFilter('sexo','all')">Todos</button>
+      <button class="rf${_rkF.sexo==='M'?' act':''}" onclick="rkFilter('sexo','M')">♂ Masc.</button>
+      <button class="rf${_rkF.sexo==='F'?' act':''}" onclick="rkFilter('sexo','F')">♀ Fem.</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.5rem;align-items:center">
+      <span style="font-size:.62rem;font-weight:800;color:var(--gr);letter-spacing:.7px;text-transform:uppercase;min-width:40px">Edad</span>
+      <button class="rf${_rkF.cat==='all'?' act':''}" onclick="rkFilter('cat','all')">Todas</button>
+      ${mCats.map(c=>`<button class="rf${_rkF.cat===c.id?' act':''}" onclick="rkFilter('cat','${c.id}')">${c.label}</button>`).join('')}
+      ${fCats.map(c=>`<button class="rf${_rkF.cat===c.id?' act':''}" onclick="rkFilter('cat','${c.id}')">${c.label}</button>`).join('')}
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:.35rem;align-items:center">
+      <span style="font-size:.62rem;font-weight:800;color:var(--gr);letter-spacing:.7px;text-transform:uppercase;min-width:40px">Nivel</span>
+      <button class="rf${_rkF.nivel==='all'?' act':''}" onclick="rkFilter('nivel','all')">Todos</button>
+      ${niveles.map(n=>`<button class="rf${_rkF.nivel===n.id?' act':''}" onclick="rkFilter('nivel','${n.id}')">${n.label}</button>`).join('')}
+    </div>`;
+}
+
+function rkFilter(dim, val) {
+  _rkF[dim] = val;
+  renderRankingFilters();
+  renderRankingTable();
+}
+window.rkFilter = rkFilter;
+
+function renderRankingTable() {
+  const body = q('#rkBd');
+  if (!body) return;
+
+  let data = _rankingData.slice();
+  if (_rkF.sexo !== 'all') data = data.filter(r => r.sexo === _rkF.sexo || (r.categoria||'').startsWith(_rkF.sexo));
+  if (_rkF.cat  !== 'all') data = data.filter(r => r.categoria === _rkF.cat);
+  if (_rkF.nivel !== 'all') data = data.filter(r => r.nivel === _rkF.nivel);
+
+  if (!data.length) {
+    body.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gr)">Sin resultados para los filtros seleccionados</td></tr>`;
+    return;
+  }
+
+  const catColors = { M35:'cm35', M40:'cm40', M45:'cm45', M50:'cm50', F35:'cm35', F40:'cm40', F45:'cm45', F50:'cm50' };
+  body.innerHTML = data.map((r, i) => {
+    const pos = i + 1;
+    const rkBadge = pos <= 3
+      ? `<div class="rk1 r${pos}">${pos}</div>`
+      : `<div class="rk1 ro">${pos}</div>`;
+    const ini = r.nombre.split(' ').map(x => x[0]).slice(0,2).join('');
+    return `<tr>
+      <td>${rkBadge}</td>
+      <td><div class="ath-cl">
+        <div class="ath-av">${ini}</div>
+        <div><div class="ath-nm">${r.nombre}</div><div class="ath-cl2">${r.club}</div></div>
+      </div></td>
+      <td><span class="cat-b ${catColors[r.categoria] || 'cm40'}">${r.categoria}</span></td>
+      <td style="font-size:.8rem;color:var(--gr)">${r.comunidad}</td>
+      <td style="text-align:center;font-size:.8rem;color:var(--gr)">${r.eventos}</td>
+      <td><div class="pts">${r.puntos}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+async function renderRanking() {
+  renderRankingFilters();
+  renderRankingTable();
+}
+window.renderRanking = renderRanking;
+
+// ── RENDER PLANS ──────────────────────────────────────────
+function renderPlans() {
+  const grid = q('#planGr');
+  if (!grid) return;
+  grid.innerHTML = PLANS.map(p => `
+    <div class="plan ${p.cl}">
+      <div class="p-hd">
+        <div class="p-nm">${p.nm}</div>
+        <div class="p-pr">${p.pr}<span>${p.pe}</span></div>
+      </div>
+      <ul class="p-fs">
+        ${p.fs.map(f => `<li>${f}</li>`).join('')}
+        ${p.no.map(f => `<li class="no">${f}</li>`).join('')}
+      </ul>
+    </div>`).join('');
+}
+
+// ── RENDER NEWS ───────────────────────────────────────────
+let _newsData = [];
+
+function renderNews(news) {
+  _newsData = news;
+  const grid = q('#nwGr');
+  if (!grid) return;
+  grid.innerHTML = news.map((n, i) => `
+    <div class="nwc${i === 0 ? ' feat' : ''}">
+      <div class="nw-th">
+        <div class="nw-em">${n.emoji || '📰'}</div>
+        <div class="nw-ov"></div>
+        <span class="nw-ct">${n.categoria}</span>
+      </div>
+      <div class="nw-bd">
+        <div class="nw-dt">${n.fecha_publicacion || n.dt || ''}</div>
+        <div class="nw-ti">${n.titulo}</div>
+        <div class="nw-ex">${n.extracto}</div>
+        <a class="nw-rd" href="#" onclick="openNewsModal(${n.id});return false;">Leer más →</a>
+      </div>
+    </div>`).join('');
+}
+
+function openNewsModal(id) {
+  const n = _newsData.find(x => String(x.id) === String(id));
+  if (!n) return;
+  const paragraphs = (n.contenido || n.extracto || '')
+    .split('\n').filter(p => p.trim())
+    .map(p => `<p style="margin:0 0 1rem;line-height:1.75;color:#374151">${p}</p>`)
+    .join('');
+  openModal(`
+    <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.5rem">
+      <span style="font-size:2rem">${n.emoji||'📰'}</span>
+      <span style="font-size:.72rem;font-weight:800;background:var(--of);border:1px solid var(--bd);padding:.2rem .55rem;border-radius:5px;color:var(--gr)">${n.categoria}</span>
+      <span style="font-size:.72rem;color:var(--gr)">${n.fecha_publicacion||''}</span>
+    </div>
+    <div class="m-ti" style="font-size:1.15rem;margin-bottom:1rem">${n.titulo}</div>
+    <div style="border-left:3px solid var(--n);padding-left:1rem;margin-bottom:1.2rem;font-style:italic;color:var(--gr);font-size:.85rem">${n.extracto}</div>
+    <div style="max-height:55vh;overflow-y:auto;padding-right:.5rem">${paragraphs || '<p style="color:var(--gr);font-style:italic">Contenido completo próximamente.</p>'}</div>
+  `);
+}
+window.openNewsModal = openNewsModal;
+
+// ── RENDER SPONSORS ───────────────────────────────────────
+function renderSponsors() {
+  const grid = q('#spGr');
+  if (!grid) return;
+  const items = [
+    { ic:'👟', nm:'Equipación',        sb:'Partner Principal' },
+    { ic:'💊', nm:'Nutrición',         sb:'Partner Oficial' },
+    { ic:'🏥', nm:'Seguros',           sb:'Partner Oficial' },
+    { ic:'✈️', nm:'Turismo',           sb:'Colaborador' },
+    { ic:'🏦', nm:'Entidad Financiera',sb:'Colaborador' },
+  ];
+  grid.innerHTML = items.map(s => `
+    <a class="sp-sl" onclick="toast('📧 Contacta info@aemt.es para patrocinar la AEMT')">
+      <span class="sp-ic">${s.ic}</span>
+      <span class="sp-tx">${s.nm}</span>
+      <span class="sp-sb">${s.sb}</span>
+    </a>`).join('');
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function openModal(html) {
+  const modal = q('#modal');
+  q('#mCt').innerHTML = html;
+  modal.classList.add('open');
+}
+function closeModal() { q('#modal').classList.remove('open'); }
+window.closeModal = closeModal;
+
+function openEventModal(titulo, lugar) {
+  openModal(`
+    <div class="m-ti">${titulo}</div>
+    <div class="m-sb">${lugar} · Evento privado AEMT</div>
+    <div class="fr">
+      <div class="fg"><label>Nombre completo</label><input type="text" id="ev-nm" placeholder="Tu nombre"></div>
+      <div class="fg"><label>Email</label><input type="email" id="ev-em" placeholder="email@email.com"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Categoría</label><input type="text" id="ev-ct" placeholder="M+40 / -68kg"></div>
+      <div class="fg"><label>Nº Licencia Federativa</label><input type="text" id="ev-lc" placeholder="Obligatoria para competir"></div>
+    </div>
+    <div class="fck" style="margin-bottom:1.4rem">
+      <input type="checkbox" id="mc">
+      <label for="mc">Confirmo tener licencia federativa vigente, acepto el reglamento del evento y las normas AEMT.</label>
+    </div>
+    <button class="fsb" onclick="submitEventForm('${titulo}')">Confirmar Inscripción</button>
+  `);
+}
+window.openEventModal = openEventModal;
+
+async function submitEventForm(titulo) {
+  if (!q('#mc').checked) { toast('⚠️ Debes aceptar el reglamento'); return; }
+  const btn = q('#modal .fsb');
+  btn.textContent = 'Enviando...'; btn.disabled = true;
+  await new Promise(r => setTimeout(r, 700));
+  closeModal();
+  toast('✅ Inscripción recibida. Confirmaremos por email en 48h.');
+}
+window.submitEventForm = submitEventForm;
+
+// ── MEMBERSHIP FORM ───────────────────────────────────────
+async function subMem() {
+  const ckp = q('#ckp');
+  if (!ckp.checked) { toast('⚠️ Debes aceptar la política de privacidad'); return; }
+
+  const nombre    = q('#f-nombre')?.value.trim();
+  const apellidos = q('#f-apellidos')?.value.trim();
+  const email     = q('#f-email')?.value.trim();
+  const telefono  = q('#f-tel')?.value.trim();
+  const ccaa      = q('#f-ccaa')?.value;
+  const plan      = q('#f-plan')?.value;
+  const grado     = q('#f-grado')?.value.trim();
+
+  if (!nombre || !apellidos || !email || !ccaa || !plan) {
+    toast('⚠️ Por favor, completa todos los campos obligatorios');
+    return;
+  }
+
+  const btn = q('#btn-mem');
+  btn.textContent = 'Enviando solicitud...'; btn.disabled = true;
+
+  const msg = q('#form-msg');
+  const { error } = await submitMembership({ nombre, apellidos, email, telefono, ccaa, plan, grado });
+
+  btn.textContent = 'Enviar Solicitud de Adhesión'; btn.disabled = false;
+
+  if (error) {
+    if (msg) { msg.textContent = '❌ Error al enviar. Inténtalo de nuevo o escríbenos a info@aemt.es'; msg.className = 'err'; }
+    toast('❌ Error al enviar la solicitud');
+  } else {
+    if (msg) { msg.textContent = '✅ Solicitud enviada. Responderemos en menos de 48 horas.'; msg.className = 'ok'; }
+    toast('✅ Solicitud enviada correctamente');
+    q('#f-nombre').value = '';
+    q('#f-apellidos').value = '';
+    q('#f-email').value = '';
+    q('#f-tel').value = '';
+    q('#f-ccaa').value = '';
+    q('#f-grado').value = '';
+    ckp.checked = false;
+    q('#cki').checked = false;
+  }
+}
+window.subMem = subMem;
+
+// ── CONTACT FORM ──────────────────────────────────────────
+async function subContact() {
+  const nombre  = q('#ct-nombre')?.value.trim();
+  const email   = q('#ct-email')?.value.trim();
+  const asunto  = q('#ct-asunto')?.value;
+  const mensaje = q('#ct-mensaje')?.value.trim();
+
+  if (!nombre || !email || !mensaje) {
+    toast('⚠️ Por favor, completa nombre, email y mensaje');
+    return;
+  }
+
+  const btn = q('#btn-contact');
+  btn.textContent = 'Enviando...'; btn.disabled = true;
+
+  const { error } = await submitContact({ nombre, email, asunto, mensaje });
+
+  btn.textContent = 'Enviar Mensaje'; btn.disabled = false;
+
+  const msg = q('#ct-msg');
+  if (error) {
+    toast('❌ Error al enviar. Escríbenos directamente a info@aemt.es');
+  } else {
+    if (msg) msg.textContent = '✅ Mensaje enviado. Responderemos en breve.';
+    toast('✅ Mensaje enviado correctamente');
+    q('#ct-nombre').value = '';
+    q('#ct-email').value  = '';
+    q('#ct-mensaje').value = '';
+  }
+}
+window.subContact = subContact;
+
+// ── LEGAL MODAL ───────────────────────────────────────────
+const LEGAL_CONTENT = {
+  aviso: {
+    titulo: 'Aviso Legal',
+    contenido: `<p>En cumplimiento de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y de Comercio Electrónico (LSSI), se informa que el presente sitio web es titularidad de la <strong>Asociación Española de Taekwondo Masters (AEMT)</strong>, con domicilio social en Madrid, España.</p>
+<p>El acceso y uso de este sitio web está sujeto a las condiciones de uso establecidas en el presente aviso legal, así como a la legislación vigente en España.</p>
+<p>La AEMT no se responsabiliza del uso que los usuarios hagan de los contenidos del sitio web ni de los daños que pudieran derivarse de dicho uso.</p>
+<p>Todos los contenidos del sitio web (textos, imágenes, logotipos, diseño) son propiedad de la AEMT o de sus licenciantes, y están protegidos por la legislación de propiedad intelectual.</p>
+<p>Para cualquier consulta legal: <strong>info@aemt.es</strong></p>`,
+  },
+  privacidad: {
+    titulo: 'Política de Privacidad',
+    contenido: `<p>La <strong>Asociación Española de Taekwondo Masters (AEMT)</strong> trata los datos personales de sus abonados y personas de contacto conforme al Reglamento (UE) 2016/679 (RGPD) y la Ley Orgánica 3/2018 de Protección de Datos (LOPDGDD).</p>
+<p><strong>Responsable del tratamiento:</strong> AEMT — info@aemt.es — Madrid, España.</p>
+<p><strong>Finalidades:</strong> Gestión de la relación asociativa, comunicaciones sobre eventos y actividades de la AEMT, y cumplimiento de obligaciones legales.</p>
+<p><strong>Base jurídica:</strong> Ejecución del contrato de adhesión, interés legítimo y consentimiento expreso del interesado.</p>
+<p><strong>Conservación:</strong> Los datos se conservan durante la vigencia de la relación asociativa y posteriormente durante los plazos legalmente exigidos.</p>
+<p><strong>Derechos:</strong> Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, portabilidad y limitación escribiendo a info@aemt.es.</p>`,
+  },
+  cookies: {
+    titulo: 'Política de Cookies',
+    contenido: `<p>Este sitio web utiliza únicamente cookies técnicas estrictamente necesarias para el funcionamiento de la web (sesión, preferencias de idioma). No se utilizan cookies de seguimiento ni publicitarias.</p>
+<p>Al navegar por este sitio web, el usuario acepta el uso de estas cookies técnicas. No es necesario instalar cookies de terceros para acceder al contenido del sitio.</p>
+<p>Puedes configurar tu navegador para bloquear o eliminar cookies en cualquier momento, aunque esto puede afectar al funcionamiento de la web.</p>
+<p>Para más información: <strong>info@aemt.es</strong></p>`,
+  },
+  estatutos: {
+    titulo: 'Estatutos AEMT',
+    contenido: `<p>Los Estatutos de la Asociación Española de Taekwondo Masters (AEMT) fueron aprobados por los socios fundadores el 16 de marzo de 2026 en Madrid.</p>
+<p>Los Estatutos constan de <strong>35 artículos</strong> organizados en los siguientes capítulos:</p>
+<ul style="padding-left:1.2rem;line-height:2">
+  <li>Cap. I — Denominación, naturaleza, domicilio y ámbito</li>
+  <li>Cap. II — Fines y actividades</li>
+  <li>Cap. III — Socios: clases, derechos y obligaciones</li>
+  <li>Cap. IV — Órganos de gobierno</li>
+  <li>Cap. V — Régimen económico</li>
+  <li>Cap. VI — Modificación de estatutos y disolución</li>
+</ul>
+<p>El texto íntegro está disponible bajo petición a los directivos o consultando en la sede de la AEMT. Una vez inscrita la asociación en el Registro Nacional de Asociaciones, los estatutos estarán disponibles para consulta pública.</p>`,
+  },
+  reglamento: {
+    titulo: 'Reglamento Interno',
+    contenido: `<p>El Reglamento de Régimen Interno de la AEMT regula el funcionamiento diario de la asociación y complementa los Estatutos en aquellos aspectos que requieren mayor detalle operativo.</p>
+<p>Consta de <strong>24 artículos</strong> que regulan, entre otros:</p>
+<ul style="padding-left:1.2rem;line-height:2">
+  <li>Procedimiento de admisión de nuevos abonados</li>
+  <li>Convocatoria y celebración de asambleas</li>
+  <li>Funcionamiento de la Junta Directiva</li>
+  <li>Régimen disciplinario</li>
+  <li>Gestión económica y presupuestaria</li>
+</ul>
+<p>Aprobado en la primera reunión de la Junta Directiva, marzo de 2026.</p>`,
+  },
+  transparencia: {
+    titulo: 'Transparencia',
+    contenido: `<p>La AEMT se compromete con la transparencia en su gestión como asociación sin ánimo de lucro. En cumplimiento de los principios de buena gobernanza:</p>
+<ul style="padding-left:1.2rem;line-height:2">
+  <li>Las cuentas anuales se aprobarán en Asamblea General Ordinaria</li>
+  <li>La composición de la Junta Directiva es pública</li>
+  <li>Las subvenciones recibidas se publicarán en esta sección</li>
+  <li>Los acuerdos de la Junta Directiva están documentados en actas</li>
+</ul>
+<p>Para solicitar información sobre la gestión de la AEMT: <strong>info@aemt.es</strong></p>`,
+  },
+};
+
+function openLegalModal(tipo) {
+  const content = LEGAL_CONTENT[tipo];
+  if (!content) return;
+  openModal(`
+    <div class="m-ti">${content.titulo}</div>
+    <div style="max-height:60vh;overflow-y:auto;padding-right:.5rem;line-height:1.7;font-size:.85rem;color:#374151">
+      ${content.contenido}
+    </div>
+    <button class="fsb" style="margin-top:1.2rem" onclick="closeModal()">Cerrar</button>
+  `);
+}
+window.openLegalModal = openLegalModal;
+
+// ── ACCESO PROTEGIDO ──────────────────────────────────────
+function checkAccesoProtegido() {
+  try {
+    const cfg = JSON.parse(localStorage.getItem('aemt_acceso') || '{}');
+    if (!cfg.activa || !cfg.password) return; // no protection
+
+    // Already authenticated this session?
+    if (sessionStorage.getItem('aemt_auth') === 'ok') return;
+
+    // Show gate
+    const gate = document.createElement('div');
+    gate.id = 'acc-gate';
+    gate.style.cssText = 'position:fixed;inset:0;background:#0a0a0a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;font-family:Outfit,sans-serif';
+    gate.innerHTML = `
+      <div style="text-align:center;margin-bottom:.5rem">
+        <div style="font-family:\'Bebas Neue\',sans-serif;font-size:3rem;letter-spacing:4px;color:#c8942a">AEMT</div>
+        <div style="font-size:.8rem;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase">Asociación Española de Taekwondo Masters</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:2rem 2.5rem;max-width:380px;width:90%;text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:.8rem">🔒</div>
+        <div style="font-size:1rem;font-weight:700;color:white;margin-bottom:.5rem">Acceso restringido</div>
+        <div style="font-size:.82rem;color:rgba(255,255,255,.5);margin-bottom:1.5rem">${cfg.mensaje || 'Sitio web en construcción. Introduce la contraseña para continuar.'}</div>
+        <input type="password" id="gate-pw" placeholder="Contraseña" style="width:100%;padding:.7rem 1rem;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:white;font-size:.9rem;text-align:center;outline:none;margin-bottom:.8rem" onkeydown="if(event.key==='Enter')checkGatePw()">
+        <button onclick="checkGatePw()" style="width:100%;padding:.75rem;background:linear-gradient(135deg,#c8942a,#e5b84e);border:none;border-radius:8px;color:#0a0a0a;font-weight:800;font-size:.9rem;cursor:pointer;letter-spacing:.5px">Entrar →</button>
+        <div id="gate-err" style="font-size:.75rem;color:#f87171;margin-top:.6rem;min-height:1rem"></div>
+      </div>`;
+    document.body.appendChild(gate);
+    document.body.style.overflow = 'hidden';
+
+    window._gatePw = cfg.password;
+  } catch { /* no block on error */ }
+}
+
+function checkGatePw() {
+  const input = document.querySelector('#gate-pw');
+  if (!input) return;
+  if (input.value === window._gatePw) {
+    sessionStorage.setItem('aemt_auth', 'ok');
+    const gate = document.querySelector('#acc-gate');
+    if (gate) { gate.style.opacity='0'; gate.style.transition='opacity .4s'; setTimeout(()=>gate.remove(),400); }
+    document.body.style.overflow = '';
+  } else {
+    const err = document.querySelector('#gate-err');
+    if (err) err.textContent = '❌ Contraseña incorrecta';
+    input.value = '';
+    input.focus();
+  }
+}
+window.checkGatePw = checkGatePw;
+
+// ── LOADER ────────────────────────────────────────────────
+function startLoader(onDone) {
+  const bar = q('.ldr-bar');
+  let pct = 0;
+  const iv = setInterval(() => {
+    pct += Math.random() * 18;
+    if (pct >= 100) { pct = 100; clearInterval(iv); }
+    if (bar) bar.style.width = pct + '%';
+  }, 120);
+  setTimeout(() => {
+    q('#ldr').classList.add('hide');
+    if (onDone) onDone();
+  }, 2000);
+}
+
+// ── INIT ──────────────────────────────────────────────────
+async function init() {
+  checkAccesoProtegido();
+  applyPortada();
+  renderTicker();
+  renderNations();
+  renderPlans();
+  renderSponsors();
+
+  // Load data (with Supabase or static fallback)
+  const [events, ranking, news, count] = await Promise.all([
+    fetchEvents(),
+    fetchRanking(),
+    fetchNews(),
+    fetchAbonadosCount(),
+  ]);
+
+  renderHeroCards(events);
+  renderEvents(events);
+  _rankingData = ranking;
+  renderRanking();
+  renderNews(news);
+
+  // Ripple effect — must attach after all dynamic content is rendered
+  qq('.btn-hp, .btn-go, .fsb, .ct-sb, .btn-ev.be-g').forEach(b => b.addEventListener('click', addRipple));
+
+  // Counter
+  const cntEl = q('#c1');
+  observeReveal();
+
+  startLoader(() => {
+    if (cntEl) animCounter(cntEl, count);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+window.toast = toast;

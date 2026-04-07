@@ -1,0 +1,11 @@
+# Documentos internos
+*.docx
+AEMT_Website_Premium_v3.html
+
+# Configuración de desarrollo
+.claude/
+docs/
+
+# Sistema
+.DS_Store
+Thumbs.db

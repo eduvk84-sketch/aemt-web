@@ -1,0 +1,3 @@
+# AEMT — Netlify Redirects
+/admin    /admin.html    200
+/login    /login.html    200

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AEMT — Panel Directivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div class="adm-wrap">
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- SIDEBAR -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <aside class="adm-sb">
+    <div class="adm-logo">
+      <div class="adm-logo-ic">AEMT</div>
+      <div class="adm-logo-txt">
+        <div class="adm-logo-t">AEMT</div>
+        <div class="adm-logo-s">Panel Directivo</div>
+      </div>
+    </div>
+
+    <div class="adm-nav-section">Principal</div>
+    <nav class="adm-nv">
+      <a class="act" data-tab="dash" onclick="admTab(this,'dash')">
+        <span class="ic">📊</span> Dashboard
+      </a>
+      <a data-tab="mbrs" onclick="admTab(this,'mbrs')">
+        <span class="ic">👥</span> Abonados
+      </a>
+      <a data-tab="evts" onclick="admTab(this,'evts')">
+        <span class="ic">📅</span> Eventos
+      </a>
+      <a data-tab="rnk" onclick="admTab(this,'rnk')">
+        <span class="ic">🏆</span> Ranking
+      </a>
+      <a data-tab="news" onclick="admTab(this,'news')">
+        <span class="ic">📰</span> Noticias
+      </a>
+    </nav>
+
+    <div class="adm-nav-section">Gestión</div>
+    <nav class="adm-nv">
+      <a data-tab="portada" onclick="admTab(this,'portada')">
+        <span class="ic">🌐</span> Portada web
+      </a>
+      <a data-tab="fin" onclick="admTab(this,'fin')">
+        <span class="ic">💶</span> Finanzas
+      </a>
+      <a data-tab="sub" onclick="admTab(this,'sub')">
+        <span class="ic">📋</span> Subvenciones
+      </a>
+      <a data-tab="leg" onclick="admTab(this,'leg')">
+        <span class="ic">⚖️</span> Legal
+      </a>
+    </nav>
+
+    <div class="adm-sb-foot">
+      <div class="adm-founders-lbl">Socios Fundadores</div>
+
+      <div class="adm-founder">
+        <div class="adm-fv">EL</div>
+        <div>
+          <div class="adm-fn2">Eduardo Lozano</div>
+          <div class="adm-fr">Presidente</div>
+        </div>
+      </div>
+      <div class="adm-founder">
+        <div class="adm-fv">TM</div>
+        <div>
+          <div class="adm-fn2">Tatiana Martín</div>
+          <div class="adm-fr">Secretaria</div>
+        </div>
+      </div>
+      <div class="adm-founder">
+        <div class="adm-fv">ML</div>
+        <div>
+          <div class="adm-fn2">M.ª Luisa Lozano</div>
+          <div class="adm-fr">Vicepresidenta</div>
+        </div>
+      </div>
+      <div class="adm-founder">
+        <div class="adm-fv">FL</div>
+        <div>
+          <div class="adm-fn2">Francisco Lozano</div>
+          <div class="adm-fr">Tesorero</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:.35rem;margin-bottom:.4rem">
+        <button onclick="exportarBackup()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.5);font-size:.65rem;font-weight:700;padding:.32rem .4rem;cursor:pointer;transition:.2s" onmouseover="this.style.color='rgba(200,148,42,.8)'" onmouseout="this.style.color='rgba(255,255,255,.5)'">📤 Backup</button>
+        <button onclick="document.querySelector('#backup-import-input')?.click()" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:7px;color:rgba(255,255,255,.5);font-size:.65rem;font-weight:700;padding:.32rem .4rem;cursor:pointer;transition:.2s" onmouseover="this.style.color='rgba(200,148,42,.8)'" onmouseout="this.style.color='rgba(255,255,255,.5)'">📥 Restaurar</button>
+      </div>
+      <button class="adm-logout" onclick="logout()">← Cerrar sesión</button>
+      <a href="index.html" style="display:flex;align-items:center;gap:.5rem;color:rgba(255,255,255,.22);font-size:.72rem;text-decoration:none;padding:.32rem .5rem;border-radius:6px;transition:.2s;margin-top:.3rem" onmouseover="this.style.color='rgba(200,148,42,.7)'" onmouseout="this.style.color='rgba(255,255,255,.22)'">
+        🌐 Ver sitio web
+      </a>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- MAIN CONTENT -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <main class="adm-main" id="admMain">
+    <!-- Content rendered by admin.js -->
+    <div style="display:flex;align-items:center;justify-content:center;height:60vh;flex-direction:column;gap:1rem;color:var(--gr)">
+      <div style="font-size:2.5rem">⏳</div>
+      <div style="font-weight:600">Verificando sesión...</div>
+    </div>
+  </main>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="m-bg" onclick="closeModal()"></div>
+  <div class="m-bx">
+    <button class="m-cl" onclick="closeModal()">✕</button>
+    <div id="mCt"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ── SCRIPTS ──────────────────────────────────────────── -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/admin.js"></script>
+
+</body>
+</html>
