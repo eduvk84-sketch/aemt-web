@@ -1985,6 +1985,7 @@ const LEGAL_DOCS = [
 
 // ── INIT ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
+  initSupabase();
   await checkAuth();
   renderTab('dash');
 });
