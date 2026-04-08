@@ -927,6 +927,7 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  initSupabase(); // debe ejecutarse antes de init() para que _isConfigured sea true
   init();
   initCookieBanner();
 });
