@@ -132,7 +132,8 @@ async function renderDash() {
       </div>
     </div>
 
-    <!-- AVISO PERSISTENCIA -->
+    <!-- AVISO PERSISTENCIA: solo en modo demo -->
+    ${!_isConfigured ? `
     <div style="margin-top:1rem;padding:.85rem 1.1rem;background:linear-gradient(135deg,#fffbeb,#fef3c7);border-radius:12px;border:1px solid #fcd34d;display:flex;align-items:flex-start;gap:.8rem">
       <div style="font-size:1.4rem;flex-shrink:0">💾</div>
       <div style="flex:1">
@@ -144,7 +145,15 @@ async function renderDash() {
           <input type="file" id="backup-import-input" accept=".json" style="display:none" onchange="importarBackup(this)">
         </div>
       </div>
-    </div>`;
+    </div>` : `
+    <div style="margin-top:1rem;padding:.85rem 1.1rem;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:12px;border:1px solid #86efac;display:flex;align-items:center;gap:.8rem">
+      <div style="font-size:1.4rem;flex-shrink:0">☁️</div>
+      <div style="flex:1">
+        <div style="font-size:.78rem;font-weight:800;color:#166534;margin-bottom:.2rem">Supabase conectado — datos en la nube</div>
+        <div style="font-size:.73rem;color:#166534;line-height:1.5">Todos los cambios se guardan en <strong>Supabase</strong> y son visibles en todos los dispositivos y en la web pública al instante.</div>
+      </div>
+    </div>`}
+    `;
 }
 
 // ── BACKUP / EXPORT ───────────────────────────────────────
