@@ -21,7 +21,9 @@ function lsGet(key, fallback) {
     const raw = localStorage.getItem(key);
     if (!raw) return fallback;
     const data = JSON.parse(raw);
-    return Array.isArray(data) && data.length ? data : fallback;
+    // Devolver el array tal cual, aunque esté vacío — sin caer en datos estáticos
+    if (!Array.isArray(data)) return fallback;
+    return data;
   } catch { return fallback; }
 }
 
@@ -124,8 +126,8 @@ async function fetchEvents() {
     .select('*')
     .eq('publicado', true)
     .order('fecha', { ascending: true });
-  if (error) { console.warn('[AEMT] fetchEvents:', error); return lsGet(LS.events, STATIC_EVENTS); }
-  return data; // respetar resultado de Supabase aunque esté vacío
+  if (error) { console.warn('[AEMT] fetchEvents:', error); return []; }
+  return data;
 }
 
 async function fetchRanking(categoria = 'all') {
@@ -140,7 +142,7 @@ async function fetchRanking(categoria = 'all') {
     .order('posicion', { ascending: true });
   if (categoria !== 'all') query = query.eq('categoria', categoria);
   const { data, error } = await query;
-  if (error) { console.warn('[AEMT] fetchRanking:', error); return lsGet(LS.ranking, STATIC_RANKING); }
+  if (error) { console.warn('[AEMT] fetchRanking:', error); return []; }
   return data;
 }
 
@@ -154,7 +156,7 @@ async function fetchNews() {
     .eq('publicada', true)
     .order('fecha_publicacion', { ascending: false })
     .limit(6);
-  if (error) { console.warn('[AEMT] fetchNews:', error); return lsGet(LS.news, STATIC_NEWS); }
+  if (error) { console.warn('[AEMT] fetchNews:', error); return []; }
   return data;
 }
 
@@ -406,9 +408,16 @@ async function fetchConfig(clave) {
 
 async function saveConfig(clave, valor) {
   if (!_isConfigured) return { error: { message: 'Supabase no configurado' } };
+  // Verificar que hay sesión activa antes de intentar escribir
+  const { data: sessionData } = await _sb.auth.getSession();
+  if (!sessionData?.session) {
+    console.error('[AEMT] saveConfig: sin sesión autenticada');
+    return { error: { message: 'Sin sesión activa — vuelve a iniciar sesión' } };
+  }
   const { error } = await _sb
     .from('configuracion')
-    .upsert({ clave, valor, actualizado_en: new Date().toISOString() }, { onConflict: 'clave' });
+    .upsert({ clave, valor }, { onConflict: 'clave' });
+  if (error) console.error('[AEMT] saveConfig error:', JSON.stringify(error));
   return { error };
 }
 

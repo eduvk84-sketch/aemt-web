@@ -211,6 +211,7 @@ function renderNations() {
 function renderHeroCards(events) {
   const container = q('#hCards');
   if (!container) return;
+  if (!events || !events.length) { container.innerHTML = ''; return; }
   const featured = events.slice(0, 3);
   const tmap = { campeonato:'bc', expedicion:'be', seminario:'bs', social:'bs' };
   const lmap = { campeonato:'Torneo', expedicion:'Expedición', seminario:'Seminario', social:'Social' };
@@ -239,6 +240,13 @@ function renderHeroCards(events) {
 function renderEvents(events) {
   const grid = q('#evGr');
   if (!grid) return;
+  if (!events || !events.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem 1rem;color:rgba(255,255,255,.3)">
+      <div style="font-size:2.5rem;margin-bottom:.8rem">📅</div>
+      <div style="font-size:.9rem;line-height:1.7">Próximamente publicaremos el calendario de eventos 2026.<br>Síguenos en redes o suscríbete para estar al tanto.</div>
+    </div>`;
+    return;
+  }
   const tmap = { campeonato:'ebt', expedicion:'ebe', seminario:'ebs', social:'ebg', liga:'ebl' };
   const lmap = { campeonato:'Torneo', expedicion:'Expedición', seminario:'Seminario', social:'Gala', liga:'Liga' };
   grid.innerHTML = events.map(e => {
@@ -339,7 +347,10 @@ function renderRankingTable() {
   if (_rkF.nivel !== 'all') data = data.filter(r => r.nivel === _rkF.nivel);
 
   if (!data.length) {
-    body.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--gr)">Sin resultados para los filtros seleccionados</td></tr>`;
+    const msg = _rankingData.length
+      ? 'Sin resultados para los filtros seleccionados'
+      : 'El ranking AEMT se publicará al cierre de la primera jornada de competición';
+    body.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2.5rem 1rem;color:var(--gr);font-size:.85rem">${msg}</td></tr>`;
     return;
   }
 
@@ -394,6 +405,13 @@ function renderNews(news) {
   _newsData = news;
   const grid = q('#nwGr');
   if (!grid) return;
+  if (!news || !news.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem 1rem;color:rgba(255,255,255,.3)">
+      <div style="font-size:2.5rem;margin-bottom:.8rem">📰</div>
+      <div style="font-size:.9rem">Las noticias de la AEMT aparecerán aquí próximamente.</div>
+    </div>`;
+    return;
+  }
   grid.innerHTML = news.map((n, i) => `
     <div class="nwc${i === 0 ? ' feat' : ''}">
       <div class="nw-th">

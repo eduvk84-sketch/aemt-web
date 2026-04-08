@@ -1264,7 +1264,7 @@ function saveAccesoConfig() {
   };
   localStorage.setItem(LS_ACCESO, JSON.stringify(cfg));
   saveConfig('acceso', cfg).then(({ error }) => {
-    if (error) toast(cfg.activa ? '🔒 Protección activada (solo este dispositivo)' : '🔓 Protección desactivada');
+    if (error) toast('⚠️ Solo local — Error: ' + (error.message || error.code || JSON.stringify(error)));
     else toast(cfg.activa ? '🔒 Protección activada en todos los dispositivos' : '🔓 Protección desactivada globalmente');
   });
   renderPortada();
@@ -1412,7 +1412,7 @@ function savePortada() {
   };
   localStorage.setItem(LS_PORTADA, JSON.stringify(data));
   saveConfig('portada', data).then(({ error }) => {
-    if (error) toast('✅ Portada guardada localmente (Supabase no disponible)');
+    if (error) toast('⚠️ Solo local — Error Supabase: ' + (error.message || error.code || JSON.stringify(error)));
     else toast('✅ Portada actualizada y publicada en todos los dispositivos');
   });
 }
