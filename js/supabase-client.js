@@ -421,5 +421,4 @@ async function saveConfig(clave, valor) {
   return { error };
 }
 
-// Init on load
-window.addEventListener('DOMContentLoaded', initSupabase);
+// initSupabase is called explicitly by main.js and admin.js before any fetch
