@@ -6,15 +6,37 @@
 [build]
   publish = "."
 
-# ── CABECERAS DE SEGURIDAD ────────────────────────────────
+# ── FORZAR HTTPS ─────────────────────────────────────────
+[[redirects]]
+  from = "http://aemtkd.es/*"
+  to   = "https://aemtkd.es/:splat"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "http://www.aemtkd.es/*"
+  to   = "https://aemtkd.es/:splat"
+  status = 301
+  force  = true
+
+# ── CABECERAS DE SEGURIDAD (todas las páginas) ────────────
 [[headers]]
   for = "/*"
   [headers.values]
+    # Clickjacking
     X-Frame-Options = "DENY"
+    # MIME sniffing
     X-Content-Type-Options = "nosniff"
-    X-XSS-Protection = "1; mode=block"
+    # Referrer
     Referrer-Policy = "strict-origin-when-cross-origin"
+    # Permisos de hardware
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # HSTS — fuerza HTTPS durante 1 año incluyendo subdominios
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    # CSP — permite exactamente lo necesario, nada más
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://oyhbdzefmofijaaerpkn.supabase.co https://oyhbdzefmofijaaerpkn.supabase.co; frame-ancestors 'none';"
+    # Cross-domain
+    X-Permitted-Cross-Domain-Policies = "none"
 
 # ── CACHE: assets estáticos (1 año) ──────────────────────
 [[headers]]
@@ -32,6 +54,17 @@
   for = "/*.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
+
+# ── CACHE: robots y sitemap ───────────────────────────────
+[[headers]]
+  for = "/robots.txt"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/sitemap.xml"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
 
 # ── REDIRECTS ────────────────────────────────────────────
 [[redirects]]

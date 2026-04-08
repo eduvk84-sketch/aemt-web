@@ -70,6 +70,7 @@ async function renderTab(tab) {
     case 'fin':   renderFinanzas();           break;
     case 'sub':   renderSubvenciones();       break;
     case 'leg':   renderLegal();              break;
+    case 'pagos': await renderPagos();        break;
     default:
       main.innerHTML = '<div style="padding:3rem;text-align:center"><div style="font-size:3rem;margin-bottom:1rem">🚧</div><div style="font-weight:700;color:var(--n)">Sección en desarrollo</div></div>';
   }
@@ -418,6 +419,7 @@ async function renderEventos() {
               <td style="display:flex;gap:.38rem;flex-wrap:wrap">
                 <button class="btn-adm-sm ghost" onclick="editEvent('${e.id}')">Editar</button>
                 <button class="btn-adm-sm danger" onclick="deleteEvent('${e.id}')">Borrar</button>
+                ${e.circular_pdf ? `<a href="${e.circular_pdf.url}" download="${e.circular_pdf.name}" class="btn-adm-sm ghost" style="text-decoration:none" title="${e.circular_pdf.name}">📄 PDF</a>` : ''}
               </td>
             </tr>`;
           }).join('')}
@@ -445,7 +447,17 @@ function eventFormHtml(e = {}) {
     </div>
     <div class="fg"><label>Categorías participantes</label><input type="text" id="ev-cat" value="${(e.categorias||'').replace(/"/g,'&quot;')}" placeholder="Ej: M35, M40, M45, M50"></div>
     <div class="fg"><label>Descripción del evento</label><textarea id="ev-desc" placeholder="Descripción pública..." style="height:70px">${e.descripcion||''}</textarea></div>
-    <div class="fg"><label>Circular para inscritos</label><textarea id="ev-circ" placeholder="Texto de la comunicación que se enviará a los inscritos..." style="height:80px">${e.circular||''}</textarea></div>
+    <div class="fg"><label>Circular para inscritos (texto)</label><textarea id="ev-circ" placeholder="Texto de la comunicación que se enviará a los inscritos..." style="height:80px">${e.circular||''}</textarea></div>
+    <div class="fg"><label>Circular / documentación PDF</label>
+      <div style="display:flex;align-items:center;gap:.7rem;flex-wrap:wrap">
+        ${e.circular_pdf
+          ? `<a href="${e.circular_pdf.url}" download="${e.circular_pdf.name}" style="font-size:.8rem;color:var(--g);text-decoration:none">📄 ${e.circular_pdf.name}</a>
+             <button type="button" onclick="quitarCircularPdf()" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:.78rem" title="Quitar">🗑️ Quitar</button>`
+          : `<button type="button" id="btn-pdf-circ" onclick="adjuntarCircularPdf()" style="background:none;border:1px solid var(--gl2);cursor:pointer;font-size:.78rem;color:var(--gr);padding:.3rem .7rem;border-radius:6px">📎 Adjuntar PDF</button>
+             <span id="pdf-circ-name" style="font-size:.76rem;color:var(--gr)"></span>`
+        }
+      </div>
+    </div>
     <div class="fr">
       <div class="fg"><label>Plazas total</label><input type="number" id="ev-pt" value="${e.plazas_total||100}" min="1"></div>
       <div class="fg"><label>Plazas ocupadas</label><input type="number" id="ev-po" value="${e.plazas_ocupadas||0}" min="0"></div>
@@ -462,12 +474,35 @@ function eventFormHtml(e = {}) {
   `;
 }
 
-function openNewEvent() { openModal(eventFormHtml()); }
+let _circularPdfTemp = null; // temporal while form is open
+
+function adjuntarCircularPdf() {
+  pickFile('.pdf', archivo => {
+    _circularPdfTemp = archivo;
+    const nameEl = document.getElementById('pdf-circ-name');
+    if (nameEl) nameEl.textContent = '📄 ' + archivo.name;
+    const btn = document.getElementById('btn-pdf-circ');
+    if (btn) btn.textContent = '🔄 Cambiar';
+  });
+}
+window.adjuntarCircularPdf = adjuntarCircularPdf;
+
+function quitarCircularPdf() {
+  _circularPdfTemp = null;
+  // Re-render the PDF block inside the open modal without closing it
+  const wrap = document.querySelector('#btn-pdf-circ')?.closest('div');
+  if (wrap) wrap.innerHTML = `<button type="button" id="btn-pdf-circ" onclick="adjuntarCircularPdf()" style="background:none;border:1px solid var(--gl2);cursor:pointer;font-size:.78rem;color:var(--gr);padding:.3rem .7rem;border-radius:6px">📎 Adjuntar PDF</button>
+    <span id="pdf-circ-name" style="font-size:.76rem;color:var(--gr)"></span>`;
+}
+window.quitarCircularPdf = quitarCircularPdf;
+
+function openNewEvent() { _circularPdfTemp = null; openModal(eventFormHtml()); }
 window.openNewEvent = openNewEvent;
 
 function editEvent(id) {
   const e = _d.events.find(ev => String(ev.id) === String(id));
   if (!e) { toast('⚠️ Evento no encontrado'); return; }
+  _circularPdfTemp = null;
   openModal(eventFormHtml(e));
 }
 window.editEvent = editEvent;
@@ -485,6 +520,7 @@ async function saveEvent(id) {
     categorias:              q('#ev-cat').value.trim(),
     descripcion:             q('#ev-desc').value.trim(),
     circular:                q('#ev-circ').value.trim(),
+    circular_pdf:            _circularPdfTemp !== null ? _circularPdfTemp : (existing.circular_pdf || null),
     plazas_total:            parseInt(q('#ev-pt').value) || 0,
     plazas_ocupadas:         parseInt(q('#ev-po').value) || 0,
     inscripciones_abiertas:  q('#ev-ins').checked,
@@ -1227,7 +1263,10 @@ function saveAccesoConfig() {
     mensaje:  q('#pt-acc-msg')?.value.trim() || '',
   };
   localStorage.setItem(LS_ACCESO, JSON.stringify(cfg));
-  toast(cfg.activa ? '🔒 Protección activada — la web pedirá contraseña' : '🔓 Protección desactivada — la web es pública');
+  saveConfig('acceso', cfg).then(({ error }) => {
+    if (error) toast(cfg.activa ? '🔒 Protección activada (solo este dispositivo)' : '🔓 Protección desactivada');
+    else toast(cfg.activa ? '🔒 Protección activada en todos los dispositivos' : '🔓 Protección desactivada globalmente');
+  });
   renderPortada();
 }
 window.saveAccesoConfig = saveAccesoConfig;
@@ -1372,7 +1411,10 @@ function savePortada() {
     footer_texto:   q('#pt-footer').value.trim(),
   };
   localStorage.setItem(LS_PORTADA, JSON.stringify(data));
-  toast('✅ Portada actualizada. Los cambios se ven al recargar la web.');
+  saveConfig('portada', data).then(({ error }) => {
+    if (error) toast('✅ Portada guardada localmente (Supabase no disponible)');
+    else toast('✅ Portada actualizada y publicada en todos los dispositivos');
+  });
 }
 window.savePortada = savePortada;
 
@@ -1398,7 +1440,7 @@ const DEFAULT_MOVIMIENTOS = [
 function loadMovimientos() {
   try {
     const raw = localStorage.getItem(LS_FIN);
-    if (raw) { const d = JSON.parse(raw); if (Array.isArray(d) && d.length) return d; }
+    if (raw) { const d = JSON.parse(raw); if (Array.isArray(d)) return d; }
     return DEFAULT_MOVIMIENTOS.map(m => ({...m}));
   } catch { return DEFAULT_MOVIMIENTOS.map(m => ({...m})); }
 }
@@ -1636,6 +1678,42 @@ function exportarFinanzas() {
 }
 window.exportarFinanzas = exportarFinanzas;
 
+// ── FILE UPLOAD HELPERS ───────────────────────────────────
+const MAX_FILE_MB = 2;
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    if (file.size > MAX_FILE_MB * 1024 * 1024) {
+      reject(new Error(`El archivo supera ${MAX_FILE_MB} MB. Usa un PDF comprimido.`));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = () => reject(new Error('Error al leer el archivo'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function pickFile(accept, onFile) {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = accept || '.pdf,.doc,.docx,.png,.jpg,.jpeg';
+  inp.style.display = 'none';
+  document.body.appendChild(inp);
+  inp.addEventListener('change', async () => {
+    const file = inp.files[0];
+    if (!file) { inp.remove(); return; }
+    try {
+      const url = await readFileAsDataURL(file);
+      onFile({ name: file.name, url, size: file.size });
+    } catch(e) {
+      toast('❌ ' + e.message);
+    }
+    inp.remove();
+  });
+  inp.click();
+}
+
 // ── SUBVENCIONES ──────────────────────────────────────────
 const LS_SUB = 'aemt_subvenciones';
 
@@ -1761,6 +1839,11 @@ function renderSubvenciones() {
             <div style="display:flex;align-items:center;gap:.6rem;padding:.4rem .5rem;background:${doc.completado?'#f0fdf4':'var(--of)'};border-radius:7px;border:1px solid ${doc.completado?'#bbf7d0':'var(--gl2)'}">
               <input type="checkbox" ${doc.completado?'checked':''} style="accent-color:#16a34a;width:15px;height:15px;flex-shrink:0" onchange="toggleDocSubv('${s.id}',${di},this.checked)">
               <span style="flex:1;font-size:.8rem;color:var(--n);${doc.completado?'text-decoration:line-through;color:var(--gr)':''}">${doc.nombre}</span>
+              ${doc.archivo
+                ? `<a href="${doc.archivo.url}" download="${doc.archivo.name}" title="${doc.archivo.name}" style="font-size:.75rem;color:var(--g);text-decoration:none;white-space:nowrap">📄 Ver</a>
+                   <button onclick="quitarArchivoDocSubv('${s.id}',${di})" style="background:none;border:none;cursor:pointer;font-size:.72rem;color:#dc2626;padding:.1rem .3rem;border-radius:4px" title="Quitar archivo">🗑️</button>`
+                : `<button onclick="adjuntarDocSubv('${s.id}',${di})" style="background:none;border:1px solid var(--gl2);cursor:pointer;font-size:.72rem;color:var(--gr);padding:.15rem .5rem;border-radius:5px;white-space:nowrap" title="Adjuntar archivo">📎 Adjuntar</button>`
+              }
               <button onclick="editDocSubv('${s.id}',${di})" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:var(--gr);padding:.1rem .3rem;border-radius:4px" title="Editar">✏️</button>
               <button onclick="removeDocSubv('${s.id}',${di})" style="background:none;border:none;cursor:pointer;font-size:.78rem;color:#dc2626;padding:.1rem .3rem;border-radius:4px" title="Eliminar">✕</button>
             </div>`).join('')}
@@ -1785,6 +1868,32 @@ function toggleDocSubv(subvId, docIdx, checked) {
   }
 }
 window.toggleDocSubv = toggleDocSubv;
+
+function adjuntarDocSubv(subvId, docIdx) {
+  pickFile('.pdf,.doc,.docx,.png,.jpg,.jpeg', archivo => {
+    const subvs = loadSubvenciones();
+    const s = subvs.find(x => x.id === subvId);
+    if (s && s.documentos[docIdx]) {
+      s.documentos[docIdx] = { ...s.documentos[docIdx], archivo };
+      saveSubvData(subvs);
+      renderSubvenciones();
+      toast(`📎 "${archivo.name}" adjuntado`);
+    }
+  });
+}
+window.adjuntarDocSubv = adjuntarDocSubv;
+
+function quitarArchivoDocSubv(subvId, docIdx) {
+  const subvs = loadSubvenciones();
+  const s = subvs.find(x => x.id === subvId);
+  if (s && s.documentos[docIdx]) {
+    const { archivo: _, ...rest } = s.documentos[docIdx];
+    s.documentos[docIdx] = rest;
+    saveSubvData(subvs);
+    renderSubvenciones();
+  }
+}
+window.quitarArchivoDocSubv = quitarArchivoDocSubv;
 
 function addDocSubv(subvId) {
   const nombre = prompt('Nombre del documento:');
@@ -1894,7 +2003,36 @@ window.deleteSubvencion = deleteSubvencion;
 window.saveSubvCheck = function() {};
 
 // ── LEGAL ─────────────────────────────────────────────────
+const LS_LEGAL_FILES = 'aemt_legal_files';
+
+function loadLegalFiles() {
+  try { return JSON.parse(localStorage.getItem(LS_LEGAL_FILES) || '{}'); } catch { return {}; }
+}
+function saveLegalFiles(data) {
+  try { localStorage.setItem(LS_LEGAL_FILES, JSON.stringify(data)); } catch {}
+}
+
+function adjuntarDocLegal(docKey) {
+  pickFile('.pdf,.doc,.docx,.png,.jpg,.jpeg', archivo => {
+    const files = loadLegalFiles();
+    files[docKey] = archivo;
+    saveLegalFiles(files);
+    renderLegal();
+    toast(`📎 "${archivo.name}" adjuntado`);
+  });
+}
+window.adjuntarDocLegal = adjuntarDocLegal;
+
+function quitarArchivoLegal(docKey) {
+  const files = loadLegalFiles();
+  delete files[docKey];
+  saveLegalFiles(files);
+  renderLegal();
+}
+window.quitarArchivoLegal = quitarArchivoLegal;
+
 function renderLegal() {
+  const files = loadLegalFiles();
   q('#admMain').innerHTML = `
     <div class="adm-topbar">
       <div class="adm-tt"><h2>Estado Legal</h2><p>Documentación y trámites registrales</p></div>
@@ -1903,13 +2041,23 @@ function renderLegal() {
       <div class="acard-hd"><div class="acard-ti">Todos los documentos AEMT</div></div>
       <div style="overflow-x:auto">
         <table class="data-table">
-          <thead><tr><th>Documento</th><th>Versión</th><th>Estado</th><th>Acción requerida</th></tr></thead>
-          <tbody>${LEGAL_DOCS.map((d, i) => `<tr style="background:${i%2?'var(--of)':'white'}">
-            <td style="font-weight:700;font-size:.82rem;color:var(--n)">${d.d}</td>
-            <td style="font-size:.76rem;color:var(--gr)">${d.v}</td>
-            <td><span style="font-size:.76rem;font-weight:700;color:${d.c}">${d.s}</span></td>
-            <td style="font-size:.76rem;color:var(--gr)">${d.a}</td>
-          </tr>`).join('')}
+          <thead><tr><th>Documento</th><th>Versión</th><th>Estado</th><th>Acción requerida</th><th>Archivo</th></tr></thead>
+          <tbody>${LEGAL_DOCS.map((d, i) => {
+            const f = files[d.d];
+            return `<tr style="background:${i%2?'var(--of)':'white'}">
+              <td style="font-weight:700;font-size:.82rem;color:var(--n)">${d.d}</td>
+              <td style="font-size:.76rem;color:var(--gr)">${d.v}</td>
+              <td><span style="font-size:.76rem;font-weight:700;color:${d.c}">${d.s}</span></td>
+              <td style="font-size:.76rem;color:var(--gr)">${d.a}</td>
+              <td style="white-space:nowrap">
+                ${f
+                  ? `<a href="${f.url}" download="${f.name}" title="${f.name}" style="font-size:.75rem;color:var(--g);text-decoration:none;margin-right:.4rem">📄 ${f.name.length>18?f.name.slice(0,18)+'…':f.name}</a>
+                     <button onclick="quitarArchivoLegal('${d.d.replace(/'/g,"\\'")}')" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:.75rem" title="Quitar">🗑️</button>`
+                  : `<button onclick="adjuntarDocLegal('${d.d.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--gl2);cursor:pointer;font-size:.72rem;color:var(--gr);padding:.15rem .5rem;border-radius:5px">📎 Adjuntar</button>`
+                }
+              </td>
+            </tr>`;
+          }).join('')}
           </tbody>
         </table>
       </div>
@@ -1982,6 +2130,92 @@ const LEGAL_DOCS = [
   { d:'AEMT Gestión SL',          v:'Capital mínimo 3.000€',           s:'📋 Mes 2',   c:'var(--n)',   a:'Notaría + Registro Mercantil Madrid' },
   { d:'Marca AEMT (OEPM)',        v:'Clases 41, 35, 36',               s:'📋 Mes 2-3', c:'var(--n)',   a:'oepm.es · ~550€' },
 ];
+
+// ── PAGOS ─────────────────────────────────────────────────
+async function renderPagos() {
+  const cfg = await fetchConfig('pagos') || {};
+  const t = cfg.transferencia || {};
+  const stripe = cfg.stripe || {};
+  const redsys = cfg.redsys || {};
+  const m = cfg.metodos || { transferencia: true, domiciliacion: false, stripe: false, redsys: false };
+
+  q('#admMain').innerHTML = `
+    <div class="adm-topbar">
+      <div class="adm-tt"><h2>Configuración de Pagos</h2><p>Métodos de pago y datos bancarios visibles en el formulario de adhesión</p></div>
+      <button class="btn-adm-gold" onclick="savePagos()">Guardar cambios</button>
+    </div>
+
+    <div class="acard" style="margin-bottom:1rem">
+      <div class="acard-hd"><div class="acard-ti">Métodos activos</div></div>
+      <div class="acard-bd" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem">
+        <label style="display:flex;align-items:center;gap:.6rem;font-size:.85rem;cursor:pointer">
+          <input type="checkbox" id="pg-m-tr" ${m.transferencia?'checked':''} style="accent-color:var(--n)"> Transferencia bancaria
+        </label>
+        <label style="display:flex;align-items:center;gap:.6rem;font-size:.85rem;cursor:pointer">
+          <input type="checkbox" id="pg-m-do" ${m.domiciliacion?'checked':''} style="accent-color:var(--n)"> Domiciliación bancaria (SEPA)
+        </label>
+        <label style="display:flex;align-items:center;gap:.6rem;font-size:.85rem;cursor:pointer">
+          <input type="checkbox" id="pg-m-st" ${m.stripe?'checked':''} style="accent-color:var(--n)"> Stripe (tarjeta)
+        </label>
+        <label style="display:flex;align-items:center;gap:.6rem;font-size:.85rem;cursor:pointer">
+          <input type="checkbox" id="pg-m-re" ${m.redsys?'checked':''} style="accent-color:var(--n)"> Redsys (tarjeta)
+        </label>
+      </div>
+    </div>
+
+    <div class="acard" style="margin-bottom:1rem">
+      <div class="acard-hd"><div class="acard-ti">Transferencia bancaria</div></div>
+      <div class="acard-bd">
+        <div class="fr">
+          <div class="fg"><label>Titular de la cuenta</label><input type="text" id="pg-tr-titular" value="${t.titular||''}" placeholder="Ej: Asociación Española de Taekwondo Masters"></div>
+          <div class="fg"><label>IBAN</label><input type="text" id="pg-tr-iban" value="${t.iban||''}" placeholder="ES00 0000 0000 00 0000000000"></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label>Banco</label><input type="text" id="pg-tr-banco" value="${t.banco||''}" placeholder="Ej: CaixaBank"></div>
+          <div class="fg"><label>Concepto de pago</label><input type="text" id="pg-tr-concepto" value="${t.concepto||'Cuota AEMT 2026 - [NOMBRE]'}" placeholder="Cuota AEMT 2026 - [NOMBRE]"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="acard" style="margin-bottom:1rem">
+      <div class="acard-hd"><div class="acard-ti">Stripe</div></div>
+      <div class="acard-bd">
+        <div class="fg"><label>Enlace de pago Stripe (Payment Link)</label><input type="url" id="pg-st-link" value="${stripe.link||''}" placeholder="https://buy.stripe.com/..."></div>
+        <p style="font-size:.75rem;color:var(--gr);margin-top:.3rem">Crea un Payment Link en dashboard.stripe.com → Payment Links. Importe: 60 €.</p>
+      </div>
+    </div>
+
+    <div class="acard">
+      <div class="acard-hd"><div class="acard-ti">Redsys</div></div>
+      <div class="acard-bd">
+        <div class="fg"><label>Enlace de pago Redsys</label><input type="url" id="pg-re-link" value="${redsys.link||''}" placeholder="https://sis.redsys.es/..."></div>
+        <p style="font-size:.75rem;color:var(--gr);margin-top:.3rem">Introduce el enlace de tu terminal virtual Redsys. Solicítalo a tu banco.</p>
+      </div>
+    </div>`;
+}
+
+async function savePagos() {
+  const cfg = {
+    metodos: {
+      transferencia: q('#pg-m-tr').checked,
+      domiciliacion: q('#pg-m-do').checked,
+      stripe:        q('#pg-m-st').checked,
+      redsys:        q('#pg-m-re').checked,
+    },
+    transferencia: {
+      titular:  q('#pg-tr-titular').value.trim(),
+      iban:     q('#pg-tr-iban').value.trim().replace(/\s/g,'').toUpperCase(),
+      banco:    q('#pg-tr-banco').value.trim(),
+      concepto: q('#pg-tr-concepto').value.trim(),
+    },
+    stripe:  { link: q('#pg-st-link').value.trim() },
+    redsys:  { link: q('#pg-re-link').value.trim() },
+  };
+  const { error } = await saveConfig('pagos', cfg);
+  if (error) toast('❌ Error al guardar: ' + (error.message || 'desconocido'));
+  else toast('✅ Configuración de pagos guardada');
+}
+window.savePagos = savePagos;
 
 // ── INIT ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {

@@ -125,7 +125,7 @@ async function fetchEvents() {
     .eq('publicado', true)
     .order('fecha', { ascending: true });
   if (error) { console.warn('[AEMT] fetchEvents:', error); return lsGet(LS.events, STATIC_EVENTS); }
-  return data.length ? data : lsGet(LS.events, STATIC_EVENTS);
+  return data; // respetar resultado de Supabase aunque esté vacío
 }
 
 async function fetchRanking(categoria = 'all') {
@@ -141,7 +141,7 @@ async function fetchRanking(categoria = 'all') {
   if (categoria !== 'all') query = query.eq('categoria', categoria);
   const { data, error } = await query;
   if (error) { console.warn('[AEMT] fetchRanking:', error); return lsGet(LS.ranking, STATIC_RANKING); }
-  return data.length ? data : lsGet(LS.ranking, STATIC_RANKING);
+  return data;
 }
 
 async function fetchNews() {
@@ -155,7 +155,7 @@ async function fetchNews() {
     .order('fecha_publicacion', { ascending: false })
     .limit(6);
   if (error) { console.warn('[AEMT] fetchNews:', error); return lsGet(LS.news, STATIC_NEWS); }
-  return data.length ? data : lsGet(LS.news, STATIC_NEWS);
+  return data;
 }
 
 async function fetchAbonadosCount() {
@@ -283,7 +283,13 @@ async function adminFetchEventos() {
     .from('eventos').select('*')
     .order('fecha', { ascending: true });
   if (error) return lsGet(LS.events, STATIC_EVENTS);
-  return data;
+  // Reinyectar circular_pdf desde localStorage (no se almacena en Supabase)
+  return (data || []).map(e => {
+    try {
+      const raw = localStorage.getItem('aemt_circ_' + e.id);
+      return raw ? { ...e, circular_pdf: JSON.parse(raw) } : e;
+    } catch { return e; }
+  });
 }
 
 async function adminUpsertEvento(evento) {
@@ -291,10 +297,30 @@ async function adminUpsertEvento(evento) {
     lsUpsert(LS.events, evento, STATIC_EVENTS);
     return { error: null };
   }
-  const { error } = evento.id
-    ? await _sb.from('eventos').update(evento).eq('id', evento.id)
-    : await _sb.from('eventos').insert([evento]);
-  return { error };
+  // Extraer campos que no van a la BD de Supabase
+  const { circular_pdf, inscritos, id: _id, ...dbEvento } = evento;
+  // Guardar circular_pdf en localStorage keyed por id (base64 no va a Supabase)
+  const savedId = evento.id || null;
+  if (savedId && circular_pdf !== undefined) {
+    try {
+      if (circular_pdf) localStorage.setItem('aemt_circ_' + savedId, JSON.stringify(circular_pdf));
+      else localStorage.removeItem('aemt_circ_' + savedId);
+    } catch {}
+  }
+  // Siempre publicado = true al guardar desde el panel
+  dbEvento.publicado = true;
+  if (evento.id) {
+    // UPDATE: no incluir id en el body
+    const { error } = await _sb.from('eventos').update(dbEvento).eq('id', evento.id);
+    return { error };
+  } else {
+    // INSERT: recuperar id para asociar circular_pdf
+    const { data, error } = await _sb.from('eventos').insert([dbEvento]).select('id').maybeSingle();
+    if (!error && data?.id && circular_pdf) {
+      try { localStorage.setItem('aemt_circ_' + data.id, JSON.stringify(circular_pdf)); } catch {}
+    }
+    return { error };
+  }
 }
 
 async function adminDeleteEvento(id) {
@@ -363,6 +389,26 @@ async function adminDeleteNoticia(id) {
     return { error: null };
   }
   const { error } = await _sb.from('noticias').delete().eq('id', id);
+  return { error };
+}
+
+// ── CONFIGURACIÓN (portada, acceso) ──────────────────────
+async function fetchConfig(clave) {
+  if (!_isConfigured) return null;
+  const { data, error } = await _sb
+    .from('configuracion')
+    .select('valor')
+    .eq('clave', clave)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data.valor;
+}
+
+async function saveConfig(clave, valor) {
+  if (!_isConfigured) return { error: { message: 'Supabase no configurado' } };
+  const { error } = await _sb
+    .from('configuracion')
+    .upsert({ clave, valor, actualizado_en: new Date().toISOString() }, { onConflict: 'clave' });
   return { error };
 }
 

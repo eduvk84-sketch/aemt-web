@@ -8,6 +8,36 @@
 <meta property="og:title" content="AEMT — Asociación Española de Masters de Taekwondo">
 <meta property="og:description" content="Donde la experiencia se convierte en excelencia. Únete a la primera asociación nacional del taekwondo Master español.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://aemtkd.es/">
+<meta property="og:image" content="https://aemtkd.es/og-image.jpg">
+<meta property="og:locale" content="es_ES">
+<meta property="og:site_name" content="AEMT">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AEMT — Asociación Española de Masters de Taekwondo">
+<meta name="twitter:description" content="Donde la experiencia se convierte en excelencia. Únete a la primera asociación nacional del taekwondo Master español.">
+<meta name="twitter:image" content="https://aemtkd.es/og-image.jpg">
+<link rel="canonical" href="https://aemtkd.es/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SportsOrganization",
+  "name": "Asociación Española de Masters de Taekwondo",
+  "alternateName": "AEMT",
+  "url": "https://aemtkd.es",
+  "email": "info@aemt.es",
+  "description": "La primera asociación nacional del taekwondo Master español. Competición, formación y proyección internacional para practicantes mayores de 35 años.",
+  "foundingDate": "2026-03-16",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "C/ Alcalá de Guadaira, 10, Local 1",
+    "addressLocality": "Madrid",
+    "postalCode": "28018",
+    "addressCountry": "ES"
+  },
+  "sport": "Taekwondo",
+  "areaServed": "ES"
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@200;300;400;500;600;700;800&family=Playfair+Display:ital,wght@1,400;1,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/main.css">
@@ -95,9 +125,9 @@
         <a class="btn-hs" href="#events"     onclick="ss('events')">Ver eventos 2026</a>
       </div>
       <div class="h-proof">
-        <div>
-          <div class="pn" id="c1">0</div>
-          <div class="pl" id="stat1-lbl">Abonados</div>
+        <div style="grid-column:span 2;background:linear-gradient(135deg,rgba(200,148,42,.18),rgba(200,148,42,.06));border:1px solid rgba(200,148,42,.3);border-radius:12px;padding:.6rem 1rem;text-align:center">
+          <div style="font-size:.72rem;font-weight:900;color:#c8942a;letter-spacing:1px;text-transform:uppercase;line-height:1.3">🏅 PRIMEROS 25 SOCIOS: 50% DTO. CUOTA 2026</div>
+          <div style="font-size:.65rem;color:rgba(255,255,255,.5);margin-top:.15rem">Medallistas WMG 2025 → mismo descuento. Plazas limitadas.</div>
         </div>
         <div>
           <div class="pn" id="stat2-num">12</div>
@@ -165,37 +195,6 @@
         </div>
       </div>
 
-      <div class="rev-r">
-        <div class="ab-card">
-          <div class="ab-flag">🇪🇸 Presidente y Fundador</div>
-          <div class="ab-nm">Eduardo Lozano Moreno</div>
-          <div class="ab-ti">
-            C.N. 6.º Dan de Taekwondo · Campeón Mundial Master 2025 (Taipéi, Taiwán)<br>
-            Director Técnico Club Kyoto Vallecas desde 2009 · Responsable Master FMTaekwondo
-          </div>
-          <div class="ab-bio">
-            Eduardo lleva el taekwondo en el ADN desde los 3 años. En 2025 alcanzó
-            la cima de su carrera en los Juegos Mundiales Master de Taiwán, compitiendo
-            ante 25.000 atletas de 108 países. Fundó el Club Kyoto Vallecas en 2009 y
-            lidera el movimiento Master en Madrid desde entonces.
-          </div>
-          <div class="ab-ac">
-            <div class="ac-i"><div class="ac-n">🥇</div><div class="ac-l">Campeón Mundial Master 2025</div></div>
-            <div class="ac-i"><div class="ac-n">6.º</div><div class="ac-l">Dan Taekwondo</div></div>
-            <div class="ac-i"><div class="ac-n">15+</div><div class="ac-l">Años formando Masters</div></div>
-            <div class="ac-i"><div class="ac-n">2009</div><div class="ac-l">Club Kyoto fundado</div></div>
-          </div>
-          <div class="ab-ps">
-            <div class="ps-lb">Alianzas internacionales</div>
-            <div class="ps-fl">
-              <span class="fp">🇺🇸 USA Masters Team</span>
-              <span class="fp">🇸🇪 Sweden Masters</span>
-              <span class="fp">🌐 IMGA</span>
-              <span class="fp">🌍 World Taekwondo</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </section>
@@ -279,8 +278,7 @@
         <div class="mem-fw">
           <div class="mf-ti">Solicitud de Adhesión</div>
           <div class="mf-sb">
-            Completa el formulario y nos pondremos en contacto en menos de 48 horas.
-            Recibirás tu carné AEMT por email.
+            Selecciona tu método de pago preferido y completa el formulario. Validaremos tu solicitud y enviaremos confirmación.
           </div>
 
           <div class="fr">
@@ -341,6 +339,24 @@
             <label for="cki">Consiento el uso de mi imagen en materiales de comunicación de la AEMT
               (fotografías y vídeos de eventos).</label>
           </div>
+
+          <!-- Método de pago -->
+          <div class="fg" style="margin-top:.5rem">
+            <label>Método de pago *</label>
+            <select id="f-pago" onchange="onPaymentMethodChange(this.value)" style="width:100%">
+              <option value="">Selecciona método...</option>
+              <option value="transferencia">Transferencia bancaria</option>
+              <option value="domiciliacion">Domiciliación bancaria (SEPA)</option>
+              <option value="stripe">Pago con tarjeta (Stripe)</option>
+              <option value="redsys">Pago con tarjeta (Redsys)</option>
+            </select>
+          </div>
+
+          <!-- Panel de pago dinámico -->
+          <div id="pago-panel" style="display:none;background:rgba(200,148,42,.06);border:1px solid rgba(200,148,42,.2);border-radius:10px;padding:1rem;margin-top:.5rem;font-size:.83rem"></div>
+
+          <!-- Honeypot anti-spam: bots lo rellenan, humanos no lo ven -->
+          <input type="text" id="hp-mem" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
 
           <button class="fsb" id="btn-mem" onclick="subMem()">
             Enviar Solicitud de Adhesión
@@ -481,6 +497,14 @@
             <label>Mensaje</label>
             <textarea id="ct-mensaje" placeholder="Escribe aquí tu consulta..."></textarea>
           </div>
+          <!-- Honeypot anti-spam -->
+          <input type="text" id="hp-ct" name="website" autocomplete="off" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+
+          <div class="fck" style="margin-bottom:.75rem">
+            <input type="checkbox" id="ct-ckp">
+            <label for="ct-ckp">He leído y acepto la <a href="#" onclick="openLegalModal('privacidad');return false;">política de privacidad</a>. Consiento el tratamiento de mis datos para atender mi consulta conforme al RGPD (UE) 2016/679.</label>
+          </div>
+
           <button class="ct-sb" id="btn-contact" onclick="subContact()">Enviar Mensaje</button>
           <p id="ct-msg"></p>
         </div>
@@ -578,10 +602,10 @@
 <!-- Supabase CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- AEMT scripts -->
-<script src="js/config.js"></script>
-<script src="js/supabase-client.js"></script>
-<script src="js/particles.js"></script>
-<script src="js/main.js"></script>
+<script src="js/config.js?v=5"></script>
+<script src="js/supabase-client.js?v=5"></script>
+<script src="js/particles.js?v=5"></script>
+<script src="js/main.js?v=5"></script>
 
 </body>
 </html>

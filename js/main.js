@@ -141,8 +141,17 @@ function loadPortada() {
   } catch { return { ...DEFAULT_PORTADA }; }
 }
 
-function applyPortada() {
-  const p = loadPortada();
+async function applyPortada() {
+  let p;
+  try {
+    const remote = await fetchConfig('portada');
+    if (remote !== null) {
+      p = { ...DEFAULT_PORTADA, ...remote };
+      try { localStorage.setItem(LS_PORTADA, JSON.stringify(remote)); } catch {}
+    } else {
+      p = loadPortada();
+    }
+  } catch { p = loadPortada(); }
 
   // Hero badge
   const hTag = q('.h-tag');
@@ -482,6 +491,9 @@ window.submitEventForm = submitEventForm;
 
 // ── MEMBERSHIP FORM ───────────────────────────────────────
 async function subMem() {
+  // Honeypot anti-spam: si el campo trampa tiene valor, es un bot
+  if (q('#hp-mem')?.value) return;
+
   const ckp = q('#ckp');
   if (!ckp.checked) { toast('⚠️ Debes aceptar la política de privacidad'); return; }
 
@@ -493,16 +505,40 @@ async function subMem() {
   const plan      = q('#f-plan')?.value;
   const grado     = q('#f-grado')?.value.trim();
 
+  const metodoPago = q('#f-pago')?.value;
   if (!nombre || !apellidos || !email || !ccaa || !plan) {
     toast('⚠️ Por favor, completa todos los campos obligatorios');
     return;
+  }
+  if (!metodoPago) { toast('⚠️ Selecciona un método de pago'); return; }
+  // Validar domiciliación SEPA
+  if (metodoPago === 'domiciliacion') {
+    const sepaIban = q('#sepa-iban')?.value.trim().replace(/\s/g,'');
+    const sepaTitular = q('#sepa-titular')?.value.trim();
+    const sepaOk = q('#sepa-ck')?.checked;
+    if (!sepaTitular || !sepaIban) { toast('⚠️ Completa los datos SEPA (titular e IBAN)'); return; }
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$/.test(sepaIban)) { toast('⚠️ IBAN no válido'); return; }
+    if (!sepaOk) { toast('⚠️ Debes aceptar el mandato SEPA'); return; }
+  }
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  if (!EMAIL_RE.test(email)) { toast('⚠️ El email no tiene un formato válido'); return; }
+
+  if (telefono) {
+    const TEL_RE = /^(\+34|0034)?[\s-]?[6789]\d{8}$/;
+    if (!TEL_RE.test(telefono.replace(/\s/g, ''))) { toast('⚠️ Teléfono no válido — usa formato español: 6XX XXX XXX'); return; }
   }
 
   const btn = q('#btn-mem');
   btn.textContent = 'Enviando solicitud...'; btn.disabled = true;
 
   const msg = q('#form-msg');
-  const { error } = await submitMembership({ nombre, apellidos, email, telefono, ccaa, plan, grado });
+  const pagoExtra = metodoPago === 'domiciliacion' ? {
+    sepa_titular: q('#sepa-titular')?.value.trim(),
+    sepa_iban: q('#sepa-iban')?.value.trim().replace(/\s/g,'').toUpperCase(),
+    sepa_bic: q('#sepa-bic')?.value.trim(),
+  } : {};
+  const { error } = await submitMembership({ nombre, apellidos, email, telefono, ccaa, plan, grado, metodo_pago: metodoPago, ...pagoExtra });
 
   btn.textContent = 'Enviar Solicitud de Adhesión'; btn.disabled = false;
 
@@ -510,7 +546,17 @@ async function subMem() {
     if (msg) { msg.textContent = '❌ Error al enviar. Inténtalo de nuevo o escríbenos a info@aemt.es'; msg.className = 'err'; }
     toast('❌ Error al enviar la solicitud');
   } else {
-    if (msg) { msg.textContent = '✅ Solicitud enviada. Responderemos en menos de 48 horas.'; msg.className = 'ok'; }
+    // Redirigir a pasarela de pago si corresponde
+    const cfg = await loadPaymentConfig();
+    if (metodoPago === 'stripe' && cfg.stripe?.link) {
+      if (msg) { msg.textContent = '✅ Solicitud enviada. Redirigiendo a Stripe...'; msg.className = 'ok'; }
+      setTimeout(() => window.open(cfg.stripe.link, '_blank'), 1200);
+    } else if (metodoPago === 'redsys' && cfg.redsys?.link) {
+      if (msg) { msg.textContent = '✅ Solicitud enviada. Redirigiendo a Redsys...'; msg.className = 'ok'; }
+      setTimeout(() => window.open(cfg.redsys.link, '_blank'), 1200);
+    } else {
+      if (msg) { msg.textContent = '✅ Solicitud enviada. Responderemos en menos de 48 horas con los detalles de pago.'; msg.className = 'ok'; }
+    }
     toast('✅ Solicitud enviada correctamente');
     q('#f-nombre').value = '';
     q('#f-apellidos').value = '';
@@ -522,10 +568,74 @@ async function subMem() {
     q('#cki').checked = false;
   }
 }
+// ── PAYMENT CONFIG & FORM ─────────────────────────────────
+let _pagoConfig = null;
+
+async function loadPaymentConfig() {
+  if (_pagoConfig) return _pagoConfig;
+  try {
+    const remote = await fetchConfig('pagos');
+    _pagoConfig = remote || {};
+  } catch { _pagoConfig = {}; }
+  return _pagoConfig;
+}
+
+async function onPaymentMethodChange(metodo) {
+  const panel = q('#pago-panel');
+  if (!panel) return;
+  if (!metodo) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
+  panel.innerHTML = '<div style="color:rgba(200,148,42,.7);font-size:.78rem">Cargando...</div>';
+  const cfg = await loadPaymentConfig();
+  if (metodo === 'transferencia') {
+    const t = cfg.transferencia || {};
+    panel.innerHTML = `
+      <div style="font-weight:700;color:#c8942a;margin-bottom:.4rem">📑 Transferencia bancaria</div>
+      <div style="line-height:1.9;color:rgba(255,255,255,.75)">
+        <div><strong>Titular:</strong> ${t.titular || 'AEMT — Asociación Española de Taekwondo Masters'}</div>
+        <div><strong>IBAN:</strong> ${t.iban || '— (configura en el panel directivo)'}</div>
+        <div><strong>Banco:</strong> ${t.banco || '—'}</div>
+        <div><strong>Concepto:</strong> ${t.concepto || 'Cuota AEMT 2026 - [TU NOMBRE]'}</div>
+      </div>
+      <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-top:.5rem">Envía el justificante a info@aemt.es tras realizar la transferencia.</div>`;
+  } else if (metodo === 'domiciliacion') {
+    panel.innerHTML = `
+      <div style="font-weight:700;color:#c8942a;margin-bottom:.6rem">🏦 Domiciliación bancaria — Mandato SEPA</div>
+      <div class="fr">
+        <div class="fg"><label>Titular de la cuenta *</label><input type="text" id="sepa-titular" placeholder="Nombre completo del titular"></div>
+        <div class="fg"><label>IBAN *</label><input type="text" id="sepa-iban" placeholder="ES00 0000 0000 00 0000000000" maxlength="34" oninput="this.value=this.value.toUpperCase()"></div>
+      </div>
+      <div class="fg"><label>BIC / SWIFT (opcional)</label><input type="text" id="sepa-bic" placeholder="Ej: CAIXESBBXXX"></div>
+      <div class="fck" style="margin-top:.6rem">
+        <input type="checkbox" id="sepa-ck">
+        <label for="sepa-ck" style="font-size:.78rem">Autorizo a la AEMT a cargar en mi cuenta el importe de la cuota anual (60 €). Este mandato está protegido por el esquema de domiciliación SEPA. Puedo cancelarlo en cualquier momento.</label>
+      </div>`;
+  } else if (metodo === 'stripe') {
+    const link = cfg.stripe?.link;
+    panel.innerHTML = link
+      ? `<div style="font-weight:700;color:#c8942a;margin-bottom:.4rem">💳 Pago con tarjeta — Stripe</div>
+         <p style="color:rgba(255,255,255,.7);font-size:.8rem">Al enviar la solicitud serás redirigido a la pasarela segura de Stripe para completar el pago de 60 €.</p>`
+      : `<div style="color:rgba(255,255,255,.5);font-size:.8rem">⚠️ Pasarela Stripe no configurada aún. Contacta con info@aemt.es.</div>`;
+  } else if (metodo === 'redsys') {
+    const link = cfg.redsys?.link;
+    panel.innerHTML = link
+      ? `<div style="font-weight:700;color:#c8942a;margin-bottom:.4rem">💳 Pago con tarjeta — Redsys</div>
+         <p style="color:rgba(255,255,255,.7);font-size:.8rem">Al enviar la solicitud serás redirigido a la pasarela Redsys para completar el pago de 60 €.</p>`
+      : `<div style="color:rgba(255,255,255,.5);font-size:.8rem">⚠️ Pasarela Redsys no configurada aún. Contacta con info@aemt.es.</div>`;
+  }
+}
+window.onPaymentMethodChange = onPaymentMethodChange;
+
 window.subMem = subMem;
 
 // ── CONTACT FORM ──────────────────────────────────────────
 async function subContact() {
+  // Honeypot anti-spam
+  if (q('#hp-ct')?.value) return;
+
+  // RGPD: verificar consentimiento
+  if (!q('#ct-ckp')?.checked) { toast('⚠️ Debes aceptar la política de privacidad'); return; }
+
   const nombre  = q('#ct-nombre')?.value.trim();
   const email   = q('#ct-email')?.value.trim();
   const asunto  = q('#ct-asunto')?.value;
@@ -535,6 +645,9 @@ async function subContact() {
     toast('⚠️ Por favor, completa nombre, email y mensaje');
     return;
   }
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  if (!EMAIL_RE.test(email)) { toast('⚠️ El email no tiene un formato válido'); return; }
 
   const btn = q('#btn-contact');
   btn.textContent = 'Enviando...'; btn.disabled = true;
@@ -560,26 +673,73 @@ window.subContact = subContact;
 const LEGAL_CONTENT = {
   aviso: {
     titulo: 'Aviso Legal',
-    contenido: `<p>En cumplimiento de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y de Comercio Electrónico (LSSI), se informa que el presente sitio web es titularidad de la <strong>Asociación Española de Taekwondo Masters (AEMT)</strong>, con domicilio social en Madrid, España.</p>
-<p>El acceso y uso de este sitio web está sujeto a las condiciones de uso establecidas en el presente aviso legal, así como a la legislación vigente en España.</p>
-<p>La AEMT no se responsabiliza del uso que los usuarios hagan de los contenidos del sitio web ni de los daños que pudieran derivarse de dicho uso.</p>
-<p>Todos los contenidos del sitio web (textos, imágenes, logotipos, diseño) son propiedad de la AEMT o de sus licenciantes, y están protegidos por la legislación de propiedad intelectual.</p>
-<p>Para cualquier consulta legal: <strong>info@aemt.es</strong></p>`,
+    contenido: `
+<h3 style="margin:.8rem 0 .4rem">1. Identificación del titular</h3>
+<p>En cumplimiento de la Ley 34/2002, de 11 de julio, de Servicios de la Sociedad de la Información y de Comercio Electrónico (LSSI-CE), se informa:</p>
+<ul style="padding-left:1.2rem;line-height:2">
+  <li><strong>Denominación:</strong> Asociación Española de Taekwondo Masters (AEMT)</li>
+  <li><strong>Domicilio social:</strong> C/ Alcalá de Guadaira, 10, Local 1, 28018 Madrid, España</li>
+  <li><strong>Email de contacto:</strong> info@aemt.es</li>
+  <li><strong>Teléfono:</strong> +34 625 59 39 98</li>
+  <li><strong>Registro:</strong> Asociación inscrita en el Registro Nacional de Asociaciones del Ministerio del Interior (número de registro pendiente de asignación tras inscripción RNA)</li>
+  <li><strong>Responsable de contenidos:</strong> Junta Directiva de la AEMT</li>
+</ul>
+<h3 style="margin:.8rem 0 .4rem">2. Objeto y ámbito de aplicación</h3>
+<p>El acceso y uso de este sitio web (<strong>aemtkd.es</strong>) está sujeto a las presentes condiciones legales y a la legislación vigente en España. El uso del sitio implica la aceptación de las mismas.</p>
+<h3 style="margin:.8rem 0 .4rem">3. Propiedad intelectual e industrial</h3>
+<p>Todos los contenidos del sitio web (textos, imágenes, logotipos, diseño gráfico, código fuente) son propiedad de la AEMT o de sus licenciantes, y están protegidos por la legislación española e internacional de propiedad intelectual e industrial. Queda prohibida su reproducción total o parcial sin autorización expresa.</p>
+<h3 style="margin:.8rem 0 .4rem">4. Responsabilidad</h3>
+<p>La AEMT no se responsabiliza de los daños que pudieran derivarse del uso del sitio web, de interrupciones del servicio, de virus informáticos o de la inexactitud de los contenidos suministrados por terceros.</p>
+<h3 style="margin:.8rem 0 .4rem">5. Legislación aplicable y jurisdicción</h3>
+<p>Las presentes condiciones se rigen por la legislación española. Para cualquier controversia, las partes se someten a los Juzgados y Tribunales de Madrid, con renuncia expresa a cualquier otro fuero.</p>
+<h3 style="margin:.8rem 0 .4rem">6. Contacto legal</h3>
+<p>Para cualquier consulta legal: <strong>info@aemt.es</strong> — Plazo de respuesta: máximo 30 días hábiles.</p>`,
   },
   privacidad: {
     titulo: 'Política de Privacidad',
-    contenido: `<p>La <strong>Asociación Española de Taekwondo Masters (AEMT)</strong> trata los datos personales de sus abonados y personas de contacto conforme al Reglamento (UE) 2016/679 (RGPD) y la Ley Orgánica 3/2018 de Protección de Datos (LOPDGDD).</p>
-<p><strong>Responsable del tratamiento:</strong> AEMT — info@aemt.es — Madrid, España.</p>
-<p><strong>Finalidades:</strong> Gestión de la relación asociativa, comunicaciones sobre eventos y actividades de la AEMT, y cumplimiento de obligaciones legales.</p>
-<p><strong>Base jurídica:</strong> Ejecución del contrato de adhesión, interés legítimo y consentimiento expreso del interesado.</p>
-<p><strong>Conservación:</strong> Los datos se conservan durante la vigencia de la relación asociativa y posteriormente durante los plazos legalmente exigidos.</p>
-<p><strong>Derechos:</strong> Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, portabilidad y limitación escribiendo a info@aemt.es.</p>`,
+    contenido: `
+<h3 style="margin:.8rem 0 .4rem">1. Responsable del tratamiento</h3>
+<ul style="padding-left:1.2rem;line-height:2">
+  <li><strong>Identidad:</strong> Asociación Española de Taekwondo Masters (AEMT)</li>
+  <li><strong>Domicilio:</strong> C/ Alcalá de Guadaira, 10, Local 1, 28018 Madrid</li>
+  <li><strong>Email:</strong> info@aemt.es — <strong>Tel:</strong> +34 625 59 39 98</li>
+</ul>
+<h3 style="margin:.8rem 0 .4rem">2. Datos que tratamos y finalidades</h3>
+<table style="width:100%;border-collapse:collapse;font-size:.82rem;margin:.5rem 0">
+  <thead><tr style="background:#f0f0f0"><th style="padding:.4rem;text-align:left;border:1px solid #ddd">Datos</th><th style="padding:.4rem;text-align:left;border:1px solid #ddd">Finalidad</th><th style="padding:.4rem;text-align:left;border:1px solid #ddd">Base jurídica</th><th style="padding:.4rem;text-align:left;border:1px solid #ddd">Conservación</th></tr></thead>
+  <tbody>
+    <tr><td style="padding:.4rem;border:1px solid #ddd">Nombre, apellidos, email, teléfono, CCAA, grado, plan</td><td style="padding:.4rem;border:1px solid #ddd">Gestión de la relación de abono</td><td style="padding:.4rem;border:1px solid #ddd">Ejecución del contrato de adhesión (art. 6.1.b RGPD)</td><td style="padding:.4rem;border:1px solid #ddd">Vigencia del abono + 5 años</td></tr>
+    <tr><td style="padding:.4rem;border:1px solid #ddd">Email</td><td style="padding:.4rem;border:1px solid #ddd">Comunicaciones sobre eventos y actividades</td><td style="padding:.4rem;border:1px solid #ddd">Consentimiento expreso (art. 6.1.a RGPD)</td><td style="padding:.4rem;border:1px solid #ddd">Hasta retirada del consentimiento</td></tr>
+    <tr><td style="padding:.4rem;border:1px solid #ddd">Nombre, email, consulta</td><td style="padding:.4rem;border:1px solid #ddd">Atención de consultas vía formulario de contacto</td><td style="padding:.4rem;border:1px solid #ddd">Consentimiento expreso (art. 6.1.a RGPD)</td><td style="padding:.4rem;border:1px solid #ddd">12 meses desde la consulta</td></tr>
+    <tr><td style="padding:.4rem;border:1px solid #ddd">Imagen (fotografías/vídeos de eventos)</td><td style="padding:.4rem;border:1px solid #ddd">Difusión de actividades de la AEMT</td><td style="padding:.4rem;border:1px solid #ddd">Consentimiento expreso (art. 6.1.a RGPD)</td><td style="padding:.4rem;border:1px solid #ddd">Hasta retirada del consentimiento</td></tr>
+  </tbody>
+</table>
+<h3 style="margin:.8rem 0 .4rem">3. Destinatarios de los datos</h3>
+<p>Los datos no se ceden a terceros salvo obligación legal. Se utilizan proveedores de servicios técnicos (alojamiento web: Netlify Inc., EE.UU., con garantías adecuadas; base de datos: Supabase Inc., EE.UU., con garantías adecuadas) que actúan como encargados del tratamiento con las debidas garantías contractuales.</p>
+<h3 style="margin:.8rem 0 .4rem">4. Transferencias internacionales</h3>
+<p>Los datos pueden transferirse a EE.UU. (Netlify, Supabase) bajo las garantías del Marco de Privacidad de Datos UE-EE.UU. (adecuación de la Comisión Europea) o cláusulas contractuales tipo.</p>
+<h3 style="margin:.8rem 0 .4rem">5. Tus derechos</h3>
+<p>Puedes ejercer en cualquier momento los derechos de <strong>acceso, rectificación, supresión, oposición, portabilidad y limitación</strong> del tratamiento escribiendo a <strong>info@aemt.es</strong> con asunto "Protección de datos" y adjuntando copia de tu DNI. Responderemos en el plazo máximo de <strong>30 días hábiles</strong>. También puedes reclamar ante la Agencia Española de Protección de Datos (<a href="https://www.aepd.es" target="_blank" rel="noopener" style="color:var(--g)">www.aepd.es</a>).</p>
+<h3 style="margin:.8rem 0 .4rem">6. Seguridad</h3>
+<p>La AEMT aplica medidas técnicas y organizativas adecuadas para garantizar la seguridad de tus datos y evitar su alteración, pérdida o acceso no autorizado.</p>`,
   },
   cookies: {
     titulo: 'Política de Cookies',
-    contenido: `<p>Este sitio web utiliza únicamente cookies técnicas estrictamente necesarias para el funcionamiento de la web (sesión, preferencias de idioma). No se utilizan cookies de seguimiento ni publicitarias.</p>
-<p>Al navegar por este sitio web, el usuario acepta el uso de estas cookies técnicas. No es necesario instalar cookies de terceros para acceder al contenido del sitio.</p>
-<p>Puedes configurar tu navegador para bloquear o eliminar cookies en cualquier momento, aunque esto puede afectar al funcionamiento de la web.</p>
+    contenido: `
+<h3 style="margin:.8rem 0 .4rem">¿Qué son las cookies?</h3>
+<p>Las cookies son pequeños archivos de texto que los sitios web almacenan en tu dispositivo al visitarlos.</p>
+<h3 style="margin:.8rem 0 .4rem">Cookies que utilizamos</h3>
+<table style="width:100%;border-collapse:collapse;font-size:.82rem;margin:.5rem 0">
+  <thead><tr style="background:#f0f0f0"><th style="padding:.4rem;text-align:left;border:1px solid #ddd">Nombre</th><th style="padding:.4rem;text-align:left;border:1px solid #ddd">Tipo</th><th style="padding:.4rem;text-align:left;border:1px solid #ddd">Finalidad</th><th style="padding:.4rem;text-align:left;border:1px solid #ddd">Duración</th></tr></thead>
+  <tbody>
+    <tr><td style="padding:.4rem;border:1px solid #ddd">aemt_cookies_ok</td><td style="padding:.4rem;border:1px solid #ddd">Técnica (localStorage)</td><td style="padding:.4rem;border:1px solid #ddd">Recordar aceptación del aviso de cookies</td><td style="padding:.4rem;border:1px solid #ddd">Persistente</td></tr>
+    <tr><td style="padding:.4rem;border:1px solid #ddd">aemt_*</td><td style="padding:.4rem;border:1px solid #ddd">Técnica (localStorage)</td><td style="padding:.4rem;border:1px solid #ddd">Almacenamiento local de datos de la aplicación (sesión de admin, preferencias)</td><td style="padding:.4rem;border:1px solid #ddd">Persistente</td></tr>
+    <tr><td style="padding:.4rem;border:1px solid #ddd">sb-* (Supabase)</td><td style="padding:.4rem;border:1px solid #ddd">Técnica (cookie de sesión)</td><td style="padding:.4rem;border:1px solid #ddd">Mantener la sesión autenticada del panel directivo</td><td style="padding:.4rem;border:1px solid #ddd">Sesión</td></tr>
+  </tbody>
+</table>
+<p>Este sitio <strong>no utiliza cookies de análisis, publicidad ni seguimiento de terceros</strong>.</p>
+<h3 style="margin:.8rem 0 .4rem">¿Cómo desactivar las cookies?</h3>
+<p>Puedes configurar tu navegador para bloquear o eliminar cookies. Ten en cuenta que esto puede afectar al funcionamiento del panel directivo. Instrucciones: <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener" style="color:var(--g)">Chrome</a> · <a href="https://support.mozilla.org/es/kb/cookies-informacion-que-los-sitios-web-guardan-en-" target="_blank" rel="noopener" style="color:var(--g)">Firefox</a> · <a href="https://support.apple.com/es-es/guide/safari/sfri11471/mac" target="_blank" rel="noopener" style="color:var(--g)">Safari</a></p>
 <p>Para más información: <strong>info@aemt.es</strong></p>`,
   },
   estatutos: {
@@ -636,9 +796,22 @@ function openLegalModal(tipo) {
 window.openLegalModal = openLegalModal;
 
 // ── ACCESO PROTEGIDO ──────────────────────────────────────
-function checkAccesoProtegido() {
+async function checkAccesoProtegido() {
   try {
-    const cfg = JSON.parse(localStorage.getItem('aemt_acceso') || '{}');
+    // Fetch authoritative config from Supabase; fallback to localStorage
+    let cfg = {};
+    try {
+      const remote = await fetchConfig('acceso');
+      if (remote !== null) {
+        cfg = remote;
+        try { localStorage.setItem('aemt_acceso', JSON.stringify(remote)); } catch {}
+      } else {
+        cfg = JSON.parse(localStorage.getItem('aemt_acceso') || '{}');
+      }
+    } catch {
+      cfg = JSON.parse(localStorage.getItem('aemt_acceso') || '{}');
+    }
+
     if (!cfg.activa || !cfg.password) return; // no protection
 
     // Already authenticated this session?
@@ -702,9 +875,9 @@ function startLoader(onDone) {
 
 // ── INIT ──────────────────────────────────────────────────
 async function init() {
-  checkAccesoProtegido();
-  applyPortada();
-  renderTicker();
+  await checkAccesoProtegido();
+  await applyPortada();
+  renderTicker(); // after applyPortada so localStorage is synced from Supabase
   renderNations();
   renderPlans();
   renderSponsors();
@@ -735,5 +908,38 @@ async function init() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+  initCookieBanner();
+});
 window.toast = toast;
+
+// ── BANNER DE COOKIES ─────────────────────────────────────
+function initCookieBanner() {
+  if (localStorage.getItem('aemt_cookies_ok')) return;
+  const banner = document.createElement('div');
+  banner.id = 'cookie-banner';
+  banner.setAttribute('role', 'dialog');
+  banner.setAttribute('aria-label', 'Aviso de cookies');
+  banner.innerHTML = `
+    <div style="max-width:700px">
+      <strong>Este sitio web utiliza cookies técnicas</strong> estrictamente necesarias para su funcionamiento. No utilizamos cookies de seguimiento ni publicitarias.
+      <a href="#" onclick="openLegalModal('cookies');return false;" style="color:var(--gl);text-decoration:underline;margin-left:.4rem">Más información</a>
+    </div>
+    <div style="display:flex;gap:.6rem;flex-shrink:0">
+      <button id="cookie-accept" onclick="acceptCookies()" style="background:var(--g);color:var(--nd);border:none;padding:.5rem 1.2rem;border-radius:6px;font-weight:700;cursor:pointer;font-size:.82rem">Aceptar</button>
+      <button onclick="rejectCookies()" style="background:transparent;color:#ccc;border:1px solid #555;padding:.5rem 1rem;border-radius:6px;cursor:pointer;font-size:.82rem">Solo necesarias</button>
+    </div>`;
+  banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;color:#e0e0e0;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;z-index:99999;font-size:.82rem;border-top:2px solid var(--g);';
+  document.body.appendChild(banner);
+}
+function acceptCookies() {
+  localStorage.setItem('aemt_cookies_ok', '1');
+  document.getElementById('cookie-banner')?.remove();
+}
+function rejectCookies() {
+  localStorage.setItem('aemt_cookies_ok', 'minimal');
+  document.getElementById('cookie-banner')?.remove();
+}
+window.acceptCookies = acceptCookies;
+window.rejectCookies = rejectCookies;
