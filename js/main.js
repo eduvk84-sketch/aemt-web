@@ -121,14 +121,14 @@ const DEFAULT_PORTADA = {
   hero_titulo:    'ASOCIACIÓN ESPAÑOLA DE TAEKWONDO MASTERS',
   hero_subtitulo: 'La élite del Taekwondo por encima de los 35 años. Competición, hermandad y excelencia.',
   hero_badge:     'Fundada en Madrid · 2026',
-  ticker:         ['AEMT Open Madrid · 15 Marzo','USA Master Cup · Junio','European Masters · Septiembre','Summer Camp · Agosto','Liga AEMT · 7 Jornadas','Gran Final · Diciembre','Únete · aemt.es'],
+  ticker:         ['AEMTKD Open Madrid · 15 Marzo','USA Master Cup · Junio','European Masters · Septiembre','Summer Camp · Agosto','Liga AEMTKD · 7 Jornadas','Gran Final · Diciembre','Únete · aemtkd.es'],
   about_titulo:   'Somos la nueva referencia del Taekwondo Master en España',
   about_texto:    'Nace para dar estructura, visibilidad y oportunidades a los practicantes de taekwondo mayores de 35 años. Un espacio donde la experiencia y la competición se fusionan.',
   stat1_num: 47,  stat1_lbl: 'Abonados',
   stat2_num: 7,   stat2_lbl: 'Eventos 2026',
   stat3_num: 5,   stat3_lbl: 'CC.AA.',
   stat4_num: 108, stat4_lbl: 'Países en IMGA',
-  contacto_email: 'info@aemt.es',
+  contacto_email: 'info@aemtkd.es',
   contacto_tel:   '+34 625 59 39 98',
   contacto_dir:   'Madrid, España',
   footer_texto:   '© 2026 Asociación Española de Taekwondo Masters (AEMT). Todos los derechos reservados.',
@@ -197,6 +197,86 @@ function renderTicker() {
   const tick = q('#tick');
   if (!tick) return;
   tick.innerHTML = [...items, ...items].map(i => `<span class="tick-it">${i}</span>`).join('');
+}
+
+// ── RENDER GALLERY ────────────────────────────────────────
+async function renderGallery() {
+  const container = q('#galGr');
+  if (!container) return;
+  const btnIg = q('#btn-instagram');
+
+  let items = [];
+  try {
+    const remote = await fetchConfig('galeria');
+    if (Array.isArray(remote) && remote.length) items = remote;
+  } catch {}
+
+  if (!items.length) {
+    // Default placeholders
+    const defaults = [
+      { caption:'Juegos Mundiales Master · Taiwán 2025', emoji:'🏆' },
+      { caption:'Club Kyoto Vallecas · Madrid', emoji:'🥋' },
+      { caption:'European Masters Championships', emoji:'🌍' },
+      { caption:'Ceremonia de entrega de medallas', emoji:'🎖️' },
+      { caption:'Equipo AEMTKD · Madrid 2026', emoji:'👥' },
+    ];
+    const grads = ['135deg,#1B3A6B,#2a5298','135deg,#0D1E38,#1B3A6B','135deg,#243f76,#1B3A6B','135deg,#13233F,#243f76','135deg,#1B3A6B,#0D1E38'];
+    container.innerHTML = defaults.map((d,i) => `
+      <div class="gi" style="background:linear-gradient(${grads[i]})">
+        <div class="gi-in">${d.emoji}<div class="gi-ov"><span class="gi-cp">${d.caption}</span></div></div>
+      </div>`).join('');
+    return;
+  }
+
+  container.innerHTML = items.map(item => {
+    if (item.imagen) {
+      return `<div class="gi" style="background:#0D1E38">
+        <div class="gi-in" style="background-image:url('${item.imagen}');background-size:cover;background-position:center;width:100%;height:100%;display:flex;align-items:flex-end">
+          <div class="gi-ov" style="opacity:1"><span class="gi-cp">${item.caption||''}</span></div>
+        </div>
+      </div>`;
+    }
+    return `<div class="gi" style="background:linear-gradient(135deg,#1B3A6B,#2a5298)">
+      <div class="gi-in">📸<div class="gi-ov"><span class="gi-cp">${item.caption||''}</span></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ── RENDER REDES SOCIALES ─────────────────────────────────
+async function renderRedes() {
+  let redes = {};
+  try {
+    const remote = await fetchConfig('redes');
+    if (remote && typeof remote === 'object') redes = remote;
+  } catch {}
+
+  const map = [
+    { id:'ft-ig', key:'instagram', icon:'📸', title:'Instagram' },
+    { id:'ft-fb', key:'facebook',  icon:'👥', title:'Facebook'  },
+    { id:'ft-yt', key:'youtube',   icon:'▶️', title:'YouTube'   },
+    { id:'ft-x',  key:'x',         icon:'𝕏', title:'X'          },
+    { id:'ft-wa', key:'whatsapp',  icon:'💬', title:'WhatsApp'  },
+  ];
+
+  map.forEach(({ id, key, icon, title }) => {
+    const el = q(`#${id}`);
+    if (!el) return;
+    const url = redes[key];
+    if (url) {
+      el.href = url;
+      el.target = '_blank';
+      el.rel = 'noopener noreferrer';
+    }
+  });
+
+  // Update "Ver Instagram" gallery link
+  const btnIg = q('#btn-instagram');
+  if (btnIg && redes.instagram) {
+    btnIg.href = redes.instagram;
+    btnIg.target = '_blank';
+    btnIg.rel = 'noopener noreferrer';
+    btnIg.onclick = null;
+  }
 }
 
 // ── RENDER NATIONS ────────────────────────────────────────
@@ -906,6 +986,8 @@ async function init() {
     fetchRanking(),
     fetchNews(),
     fetchAbonadosCount(),
+    renderGallery(),
+    renderRedes(),
   ]);
 
   renderHeroCards(events);

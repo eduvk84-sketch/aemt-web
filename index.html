@@ -24,7 +24,7 @@
   "name": "Asociación Española de Masters de Taekwondo",
   "alternateName": "AEMT",
   "url": "https://aemtkd.es",
-  "email": "info@aemt.es",
+  "email": "info@aemtkd.es",
   "description": "La primera asociación nacional del taekwondo Master español. Competición, formación y proyección internacional para practicantes mayores de 35 años.",
   "foundingDate": "2026-03-16",
   "address": {
@@ -378,25 +378,9 @@
         <div class="s-lbl" style="color:rgba(200,148,42,.7)">Galería</div>
         <h2 class="s-ttl li">AEMT en acción</h2>
       </div>
-      <a class="btn-ev be-o" href="#" onclick="toast('📸 Galería completa en @aemt_es')">Ver Instagram →</a>
+      <a id="btn-instagram" class="btn-ev be-o" href="#" onclick="toast('📸 Síguenos en Instagram')">Ver Instagram →</a>
     </div>
-    <div class="gal-gr">
-      <div class="gi" style="background:linear-gradient(135deg,#1B3A6B,#2a5298)">
-        <div class="gi-in">🏆<div class="gi-ov"><span class="gi-cp">Juegos Mundiales Master · Taiwán 2025</span></div></div>
-      </div>
-      <div class="gi" style="background:linear-gradient(135deg,#0D1E38,#1B3A6B)">
-        <div class="gi-in">🥋<div class="gi-ov"><span class="gi-cp">Club Kyoto Vallecas · Madrid</span></div></div>
-      </div>
-      <div class="gi" style="background:linear-gradient(135deg,#243f76,#1B3A6B)">
-        <div class="gi-in">🌍<div class="gi-ov"><span class="gi-cp">European Masters Championships</span></div></div>
-      </div>
-      <div class="gi" style="background:linear-gradient(135deg,#13233F,#243f76)">
-        <div class="gi-in">🎖️<div class="gi-ov"><span class="gi-cp">Ceremonia de entrega de medallas</span></div></div>
-      </div>
-      <div class="gi" style="background:linear-gradient(135deg,#1B3A6B,#0D1E38)">
-        <div class="gi-in">👥<div class="gi-ov"><span class="gi-cp">Equipo AEMT · Madrid 2026</span></div></div>
-      </div>
-    </div>
+    <div class="gal-gr" id="galGr"></div>
   </div>
 </section>
 
@@ -443,7 +427,7 @@
             <div class="ct-ic">📧</div>
             <div>
               <div class="ct-lb">Email oficial</div>
-              <div class="ct-vl" id="ct-email-lbl">info@aemt.es</div>
+              <div class="ct-vl" id="ct-email-lbl">info@aemtkd.es</div>
             </div>
           </div>
           <div class="ct-it">
@@ -530,11 +514,11 @@
           · RNA — Min. del Interior. C/ Alcalá de Guadaira, 10, 28018 Madrid.
         </div>
         <div class="ft-sc">
-          <a class="fsc" title="Instagram">📸</a>
-          <a class="fsc" title="Facebook">👥</a>
-          <a class="fsc" title="YouTube">▶️</a>
-          <a class="fsc" title="X">𝕏</a>
-          <a class="fsc" title="WhatsApp">💬</a>
+          <a id="ft-ig" class="fsc" title="Instagram" href="#">📸</a>
+          <a id="ft-fb" class="fsc" title="Facebook"  href="#">👥</a>
+          <a id="ft-yt" class="fsc" title="YouTube"   href="#">▶️</a>
+          <a id="ft-x"  class="fsc" title="X"         href="#">𝕏</a>
+          <a id="ft-wa" class="fsc" title="WhatsApp"  href="#">💬</a>
         </div>
       </div>
 

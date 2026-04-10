@@ -70,6 +70,7 @@ async function renderTab(tab) {
     case 'fin':   renderFinanzas();           break;
     case 'sub':   renderSubvenciones();       break;
     case 'leg':   renderLegal();              break;
+    case 'desc':  renderDescuentos();          break;
     case 'pagos': await renderPagos();        break;
     default:
       main.innerHTML = '<div style="padding:3rem;text-align:center"><div style="font-size:3rem;margin-bottom:1rem">🚧</div><div style="font-weight:700;color:var(--n)">Sección en desarrollo</div></div>';
@@ -197,6 +198,23 @@ function importarBackup(input) {
 }
 window.importarBackup = importarBackup;
 
+// ── HELPERS ABONADOS ─────────────────────────────────────
+function generarNumeroSocio(existentes) {
+  const nums = existentes.map(a => {
+    const m = (a.numero_socio||'').match(/(\d+)$/);
+    return m ? parseInt(m[1]) : 0;
+  });
+  const next = (Math.max(0, ...nums) + 1);
+  return 'ID-' + String(next).padStart(3, '0');
+}
+
+const PLANES_OPTS = `
+  <option value="estandar">Estándar — 60€/año</option>
+  <option value="joven">Joven (14-25) — 60€/año</option>
+  <option value="colaborador">Colaborador — 60€/año</option>
+  <option value="fundador">Fundador — 0€ (exento)</option>
+`;
+
 // ── MEMBERS ───────────────────────────────────────────────
 async function renderMiembros() {
   const data = await adminFetchAbonados();
@@ -214,24 +232,27 @@ async function renderMiembros() {
       </div>
       <div style="overflow-x:auto">
         <table class="data-table" id="mbTbl">
-          <thead><tr><th>Abonado</th><th>Club / Org.</th><th>Plan</th><th>CCAA</th><th>Grado</th><th>Estado</th><th>Fecha solicitud</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>ID</th><th>Abonado</th><th>Plan</th><th>CCAA</th><th>Estado</th><th>Adhesión</th><th>Acciones</th></tr></thead>
           <tbody>
             ${data.map(mb => {
               const ini = ((mb.nombre||'').charAt(0) + (mb.apellidos||'').charAt(0)).toUpperCase();
               const stCls = mb.estado==='activo'?'sp-a':mb.estado==='pendiente'?'sp-p':'sp-i';
               const stLbl = mb.estado==='activo'?'Activo':mb.estado==='pendiente'?'Pendiente':'Inactivo';
-              const fecha = mb.fecha_solicitud ? new Date(mb.fecha_solicitud).toLocaleDateString('es-ES') : '—';
+              const adhesion = mb.fecha_adhesion ? new Date(mb.fecha_adhesion).toLocaleDateString('es-ES') : '—';
+              const planLbl = mb.plan==='fundador'?'⭐ Fundador':mb.plan==='joven'?'Joven':mb.plan==='colaborador'?'Colaborador':'Estándar';
+              const fotoEl = mb.foto_carnet
+                ? `<img src="${mb.foto_carnet}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid var(--gl)">`
+                : `<div class="mb-av">${ini}</div>`;
               return `<tr data-id="${mb.id||''}">
+                <td style="font-size:.75rem;font-weight:700;color:var(--g)">${mb.numero_socio||'—'}</td>
                 <td><div class="ath-cl">
-                  <div class="mb-av">${ini}</div>
+                  ${fotoEl}
                   <div><div class="mb-nm">${mb.nombre||''} ${mb.apellidos||''}</div><div class="mb-dt">${mb.email||''}</div></div>
                 </div></td>
-                <td style="font-size:.78rem;color:var(--gr)">${mb.club||'—'}</td>
-                <td style="font-size:.8rem;color:var(--gr)">${mb.plan||'Estándar'}</td>
+                <td><span style="font-size:.75rem;font-weight:700;color:${mb.plan==='fundador'?'#b45309':'var(--gr)'}">${planLbl}</span></td>
                 <td style="font-size:.8rem;color:var(--gr)">${mb.comunidad_autonoma||'—'}</td>
-                <td style="font-size:.8rem;color:var(--gr)">${mb.cinturon||'—'}</td>
                 <td><span class="sp ${stCls}">${stLbl}</span></td>
-                <td style="font-size:.78rem;color:var(--gr)">${fecha}</td>
+                <td style="font-size:.78rem;color:var(--gr)">${adhesion}</td>
                 <td style="display:flex;gap:.38rem;flex-wrap:wrap">
                   <button class="btn-adm-sm primary" onclick="editMember('${mb.id}')">Editar</button>
                   ${mb.estado==='pendiente'?`<button class="btn-adm-sm success" onclick="approveM('${mb.id}')">Aprobar</button>`:''}
@@ -252,9 +273,12 @@ window.filterMbrs = function(v) {
 };
 
 async function approveM(id) {
-  const { error } = await adminUpdateAbonado(id, { estado: 'activo' });
+  const { error } = await adminUpdateAbonado(id, {
+    estado: 'activo',
+    fecha_adhesion: new Date().toISOString().split('T')[0],
+  });
   if (error) toast('❌ Error al aprobar');
-  else { toast('✅ Abonado aprobado'); renderMiembros(); }
+  else { toast('✅ Abonado aprobado — fecha adhesión registrada'); renderMiembros(); }
 }
 window.approveM = approveM;
 
@@ -268,43 +292,100 @@ async function deleteAbonado(id) {
 }
 window.deleteAbonado = deleteAbonado;
 
+let _fotoCarnetTemp = null;
+let _justificanteTemp = null;
+
 function openNewMember() {
+  _fotoCarnetTemp = null;
+  _justificanteTemp = null;
+  const numSocio = generarNumeroSocio(_d.abonados);
   openModal(`
     <div class="m-ti">Nuevo Abonado</div>
-    <div class="m-sb">Registro manual desde el Panel Directivo</div>
-    <div class="fr">
-      <div class="fg"><label>Nombre</label><input type="text" id="nm-n" placeholder="Nombre"></div>
-      <div class="fg"><label>Apellidos</label><input type="text" id="nm-ap" placeholder="Apellidos"></div>
+    <div class="m-sb">Registro manual desde el Panel Directivo · ${numSocio}</div>
+
+    <!-- FOTO CARNET -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;padding:.8rem;background:var(--of);border-radius:10px;border:1px solid var(--bd)">
+      <div id="foto-preview" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--n),#2a5298);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;overflow:hidden">👤</div>
+      <div>
+        <div style="font-size:.8rem;font-weight:700;color:var(--n);margin-bottom:.3rem">Foto carnet (opcional)</div>
+        <button type="button" class="btn-adm-sm ghost" onclick="pickFotoCarnet()">📷 Subir foto</button>
+        <button type="button" id="btn-quitar-foto" class="btn-adm-sm danger" style="display:none" onclick="quitarFotoCarnet()">Quitar</button>
+      </div>
     </div>
-    <div class="fg"><label>Email</label><input type="email" id="nm-em" placeholder="correo@email.com"></div>
+
+    <div class="fr">
+      <div class="fg"><label>Nombre *</label><input type="text" id="nm-n" placeholder="Nombre"></div>
+      <div class="fg"><label>Apellidos *</label><input type="text" id="nm-ap" placeholder="Apellidos"></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Email *</label><input type="email" id="nm-em" placeholder="correo@email.com"></div>
+      <div class="fg"><label>Fecha nacimiento</label><input type="date" id="nm-fn"></div>
+    </div>
     <div class="fr">
       <div class="fg"><label>Teléfono</label><input type="tel" id="nm-tel" placeholder="+34 600 000 000"></div>
       <div class="fg"><label>CCAA</label><select id="nm-ccaa">${ccaaOpts()}</select></div>
     </div>
     <div class="fg"><label>Club / Asociación / Organización</label><input type="text" id="nm-cl" placeholder="Ej: Club Kyoto Vallecas"></div>
     <div class="fr">
-      <div class="fg"><label>Nacionalidad</label><input type="text" id="nm-nac" placeholder="Ej: Española" value="Española"></div>
-      <div class="fg"><label>Federación</label><input type="text" id="nm-fed" placeholder="Ej: RFTKD" value="RFTKD"></div>
+      <div class="fg"><label>Nacionalidad</label><input type="text" id="nm-nac" value="Española"></div>
+      <div class="fg"><label>Federación</label><input type="text" id="nm-fed" value="RFTKD"></div>
     </div>
     <div class="fr">
-      <div class="fg"><label>Plan</label><select id="nm-plan">
-        <option value="estandar">Estándar — 60€/año</option>
-        <option value="joven">Joven — 60€/año</option>
-        <option value="colaborador">Colaborador — 60€/año</option>
-      </select></div>
+      <div class="fg"><label>Plan</label><select id="nm-plan">${PLANES_OPTS}</select></div>
       <div class="fg"><label>Grado (Dan)</label><input type="text" id="nm-gr" placeholder="Ej: 3.º Dan"></div>
     </div>
-    <div class="fg"><label>Notas</label><textarea id="nm-no" placeholder="Observaciones..." style="height:60px"></textarea></div>
-    <button class="m-fsb" onclick="saveNewMember()">Registrar Abonado</button>
+
+    <!-- JUSTIFICANTE PAGO -->
+    <div style="padding:.7rem;background:var(--of);border-radius:8px;border:1px solid var(--bd);margin-bottom:.8rem">
+      <div style="font-size:.78rem;font-weight:700;color:var(--n);margin-bottom:.4rem">Justificante de pago</div>
+      <div style="display:flex;align-items:center;gap:.6rem" id="just-wrap">
+        <button type="button" class="btn-adm-sm ghost" onclick="pickJustificante()">📎 Adjuntar justificante</button>
+        <span id="just-name" style="font-size:.76rem;color:var(--gr)">Sin archivo</span>
+      </div>
+    </div>
+
+    <div class="fg"><label>Notas</label><textarea id="nm-no" placeholder="Observaciones..." style="height:55px"></textarea></div>
+    <button class="m-fsb" onclick="saveNewMember('${numSocio}')">Registrar Abonado</button>
   `);
 }
 window.openNewMember = openNewMember;
 
-async function saveNewMember() {
+function pickFotoCarnet() {
+  pickFile('.jpg,.jpeg,.png,.webp', archivo => {
+    _fotoCarnetTemp = archivo.url;
+    const prev = q('#foto-preview');
+    if (prev) prev.innerHTML = `<img src="${archivo.url}" style="width:100%;height:100%;object-fit:cover">`;
+    const btn = q('#btn-quitar-foto');
+    if (btn) btn.style.display = '';
+  });
+}
+window.pickFotoCarnet = pickFotoCarnet;
+
+function quitarFotoCarnet() {
+  _fotoCarnetTemp = null;
+  const prev = q('#foto-preview');
+  if (prev) prev.innerHTML = '👤';
+  const btn = q('#btn-quitar-foto');
+  if (btn) btn.style.display = 'none';
+}
+window.quitarFotoCarnet = quitarFotoCarnet;
+
+function pickJustificante() {
+  pickFile('.pdf,.jpg,.jpeg,.png', archivo => {
+    _justificanteTemp = archivo;
+    const nameEl = q('#just-name');
+    if (nameEl) nameEl.textContent = '📄 ' + archivo.name;
+  });
+}
+window.pickJustificante = pickJustificante;
+
+async function saveNewMember(numSocio) {
   const data = {
+    numero_socio:       numSocio || generarNumeroSocio(_d.abonados),
     nombre:             q('#nm-n').value.trim(),
     apellidos:          q('#nm-ap').value.trim(),
     email:              q('#nm-em').value.trim(),
+    fecha_nacimiento:   q('#nm-fn').value || null,
     telefono:           q('#nm-tel').value.trim(),
     comunidad_autonoma: q('#nm-ccaa').value,
     club:               q('#nm-cl').value.trim(),
@@ -315,49 +396,82 @@ async function saveNewMember() {
     notas:              q('#nm-no').value.trim(),
     estado:             'activo',
     fecha_solicitud:    new Date().toISOString(),
+    foto_carnet:        _fotoCarnetTemp || null,
+    justificante_pago:  _justificanteTemp ? JSON.stringify(_justificanteTemp) : null,
   };
   if (!data.nombre || !data.email) { toast('⚠️ Nombre y email son obligatorios'); return; }
   const { error } = await adminInsertAbonado(data);
   closeModal();
   if (error) toast('❌ Error al registrar: ' + (error.message||''));
-  else { toast('✅ Abonado registrado'); renderMiembros(); }
+  else { toast('✅ Abonado registrado · ' + data.numero_socio); renderMiembros(); }
 }
 window.saveNewMember = saveNewMember;
 
 function editMember(id) {
   const mb = _d.abonados.find(a => String(a.id) === String(id));
   if (!mb) { toast('⚠️ Abonado no encontrado'); return; }
+  _fotoCarnetTemp = mb.foto_carnet || null;
+  _justificanteTemp = mb.justificante_pago ? (() => { try { return JSON.parse(mb.justificante_pago); } catch { return null; } })() : null;
+
+  const planSel = key => PLANES_OPTS.replace(`value="${key}"`, `value="${key}" selected`);
+
   openModal(`
     <div class="m-ti">Editar Abonado</div>
-    <div class="m-sb">${mb.nombre} ${mb.apellidos||''}</div>
+    <div class="m-sb">${mb.numero_socio||''} · ${mb.nombre} ${mb.apellidos||''}</div>
+
+    <!-- FOTO CARNET -->
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;padding:.8rem;background:var(--of);border-radius:10px;border:1px solid var(--bd)">
+      <div id="foto-preview" style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--n),#2a5298);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;overflow:hidden">
+        ${mb.foto_carnet ? `<img src="${mb.foto_carnet}" style="width:100%;height:100%;object-fit:cover">` : '👤'}
+      </div>
+      <div>
+        <div style="font-size:.8rem;font-weight:700;color:var(--n);margin-bottom:.3rem">Foto carnet</div>
+        <button type="button" class="btn-adm-sm ghost" onclick="pickFotoCarnet()">📷 Cambiar foto</button>
+        <button type="button" id="btn-quitar-foto" class="btn-adm-sm danger" style="${mb.foto_carnet?'':'display:none'}" onclick="quitarFotoCarnet()">Quitar</button>
+      </div>
+    </div>
+
     <div class="fr">
       <div class="fg"><label>Nombre</label><input type="text" id="em-n" value="${mb.nombre||''}"></div>
       <div class="fg"><label>Apellidos</label><input type="text" id="em-ap" value="${mb.apellidos||''}"></div>
     </div>
-    <div class="fg"><label>Email</label><input type="email" id="em-em" value="${mb.email||''}"></div>
+    <div class="fr">
+      <div class="fg"><label>Email</label><input type="email" id="em-em" value="${mb.email||''}"></div>
+      <div class="fg"><label>Fecha nacimiento</label><input type="date" id="em-fn" value="${mb.fecha_nacimiento||''}"></div>
+    </div>
     <div class="fr">
       <div class="fg"><label>Teléfono</label><input type="tel" id="em-tel" value="${mb.telefono||''}"></div>
       <div class="fg"><label>CCAA</label><select id="em-ccaa">${ccaaOpts(mb.comunidad_autonoma)}</select></div>
     </div>
-    <div class="fg"><label>Club / Asociación / Organización</label><input type="text" id="em-cl" value="${mb.club||''}"></div>
+    <div class="fg"><label>Club / Asociación</label><input type="text" id="em-cl" value="${mb.club||''}"></div>
     <div class="fr">
       <div class="fg"><label>Nacionalidad</label><input type="text" id="em-nac" value="${mb.nacionalidad||'Española'}"></div>
       <div class="fg"><label>Federación</label><input type="text" id="em-fed" value="${mb.federacion||'RFTKD'}"></div>
     </div>
     <div class="fr">
-      <div class="fg"><label>Plan</label><select id="em-plan">
-        <option value="estandar" ${mb.plan==='estandar'?'selected':''}>Estándar — 60€/año</option>
-        <option value="joven" ${mb.plan==='joven'?'selected':''}>Joven — 60€/año</option>
-        <option value="colaborador" ${mb.plan==='colaborador'?'selected':''}>Colaborador — 60€/año</option>
-      </select></div>
+      <div class="fg"><label>Plan</label><select id="em-plan">${planSel(mb.plan||'estandar')}</select></div>
       <div class="fg"><label>Grado (Dan)</label><input type="text" id="em-gr" value="${mb.cinturon||''}"></div>
     </div>
-    <div class="fg"><label>Estado</label><select id="em-st">
-      <option value="activo" ${mb.estado==='activo'?'selected':''}>Activo</option>
-      <option value="pendiente" ${mb.estado==='pendiente'?'selected':''}>Pendiente</option>
-      <option value="inactivo" ${mb.estado==='inactivo'?'selected':''}>Inactivo</option>
-    </select></div>
-    <div class="fg"><label>Notas</label><textarea id="em-no" style="height:60px">${mb.notas||''}</textarea></div>
+    <div class="fr">
+      <div class="fg"><label>Estado</label><select id="em-st">
+        <option value="activo"    ${mb.estado==='activo'?'selected':''}>Activo</option>
+        <option value="pendiente" ${mb.estado==='pendiente'?'selected':''}>Pendiente</option>
+        <option value="inactivo"  ${mb.estado==='inactivo'?'selected':''}>Inactivo</option>
+      </select></div>
+      <div class="fg"><label>Fecha adhesión</label><input type="date" id="em-adh" value="${mb.fecha_adhesion||''}"></div>
+    </div>
+
+    <!-- JUSTIFICANTE PAGO -->
+    <div style="padding:.7rem;background:var(--of);border-radius:8px;border:1px solid var(--bd);margin-bottom:.8rem">
+      <div style="font-size:.78rem;font-weight:700;color:var(--n);margin-bottom:.4rem">Justificante de pago</div>
+      <div style="display:flex;align-items:center;gap:.6rem" id="just-wrap">
+        <button type="button" class="btn-adm-sm ghost" onclick="pickJustificante()">📎 ${_justificanteTemp ? 'Cambiar' : 'Adjuntar'} justificante</button>
+        <span id="just-name" style="font-size:.76rem;color:var(--gr)">${_justificanteTemp ? '📄 ' + _justificanteTemp.name : 'Sin archivo'}</span>
+        ${_justificanteTemp ? `<a href="${_justificanteTemp.url}" download="${_justificanteTemp.name}" style="font-size:.75rem;color:var(--g);text-decoration:none">Ver</a>` : ''}
+      </div>
+    </div>
+
+    <div class="fg"><label>Notas</label><textarea id="em-no" style="height:55px">${mb.notas||''}</textarea></div>
     <button class="m-fsb" onclick="saveMember('${mb.id}')">Guardar Cambios</button>
   `);
 }
@@ -368,6 +482,7 @@ async function saveMember(id) {
     nombre:             q('#em-n').value.trim(),
     apellidos:          q('#em-ap').value.trim(),
     email:              q('#em-em').value.trim(),
+    fecha_nacimiento:   q('#em-fn').value || null,
     telefono:           q('#em-tel').value.trim(),
     comunidad_autonoma: q('#em-ccaa').value,
     club:               q('#em-cl').value.trim(),
@@ -376,7 +491,10 @@ async function saveMember(id) {
     plan:               q('#em-plan').value,
     cinturon:           q('#em-gr').value.trim() || null,
     estado:             q('#em-st').value,
+    fecha_adhesion:     q('#em-adh').value || null,
     notas:              q('#em-no').value.trim(),
+    foto_carnet:        _fotoCarnetTemp || null,
+    justificante_pago:  _justificanteTemp ? JSON.stringify(_justificanteTemp) : null,
   };
   if (!updates.nombre || !updates.email) { toast('⚠️ Nombre y email son obligatorios'); return; }
   const { error } = await adminUpdateAbonado(id, updates);
@@ -707,15 +825,85 @@ function loadPuntosConfig() {
 
 function savePuntosConfig() {
   const cfg = loadPuntosConfig();
-  cfg.posiciones.forEach(     (p, i) => { p.puntos = parseInt(q(`#pt-pos-${i}`)?.value)   || 0; });
-  cfg.multiplicadores.forEach((m, i) => { m.x      = parseFloat(q(`#pt-mul-${i}`)?.value) || 0; });
-  cfg.bonus.forEach(          (b, i) => { b.puntos = parseInt(q(`#pt-bon-${i}`)?.value)   || 0; });
-  cfg.penalizaciones.forEach( (p, i) => { p.puntos = parseInt(q(`#pt-pen-${i}`)?.value)   || 0; });
+
+  // Read posiciones (dynamic rows)
+  cfg.posiciones = [];
+  let i = 0;
+  while (q(`#pt-pos-emoji-${i}`) !== null) {
+    cfg.posiciones.push({
+      pos:    i,
+      emoji:  q(`#pt-pos-emoji-${i}`).value || '🎽',
+      label:  q(`#pt-pos-label-${i}`).value.trim() || `Posición ${i+1}`,
+      puntos: parseInt(q(`#pt-pos-${i}`).value) || 0,
+    });
+    i++;
+  }
+
+  // Read multiplicadores (dynamic rows)
+  cfg.multiplicadores = [];
+  i = 0;
+  while (q(`#pt-mul-label-${i}`) !== null) {
+    cfg.multiplicadores.push({
+      tipo:  q(`#pt-mul-tipo-${i}`).value.trim() || ('tipo'+i),
+      label: q(`#pt-mul-label-${i}`).value.trim() || `Tipo ${i+1}`,
+      x:     parseFloat(q(`#pt-mul-${i}`).value) || 0,
+    });
+    i++;
+  }
+
+  // Read bonus (dynamic rows)
+  cfg.bonus = [];
+  i = 0;
+  while (q(`#pt-bon-emoji-${i}`) !== null) {
+    cfg.bonus.push({
+      id:     q(`#pt-bon-id-${i}`).value.trim() || ('bon'+i),
+      emoji:  q(`#pt-bon-emoji-${i}`).value || '⭐',
+      label:  q(`#pt-bon-label-${i}`).value.trim() || `Bonificación ${i+1}`,
+      puntos: parseInt(q(`#pt-bon-${i}`).value) || 0,
+    });
+    i++;
+  }
+
+  // Read penalizaciones (dynamic rows)
+  cfg.penalizaciones = [];
+  i = 0;
+  while (q(`#pt-pen-emoji-${i}`) !== null) {
+    cfg.penalizaciones.push({
+      id:     q(`#pt-pen-id-${i}`).value.trim() || ('pen'+i),
+      emoji:  q(`#pt-pen-emoji-${i}`).value || '🚫',
+      label:  q(`#pt-pen-label-${i}`).value.trim() || `Penalización ${i+1}`,
+      puntos: -(Math.abs(parseInt(q(`#pt-pen-${i}`).value) || 0)),
+    });
+    i++;
+  }
+
   localStorage.setItem(LS_PUNTOS, JSON.stringify(cfg));
   toast('✅ Configuración de puntos guardada');
-  calcPuntos(); // refresh calculator
+  renderRankingAdmin();
 }
 window.savePuntosConfig = savePuntosConfig;
+
+function addBaremoRow(section) {
+  const cfg = loadPuntosConfig();
+  if (section === 'pos')      cfg.posiciones.push({ pos: cfg.posiciones.length, emoji:'🎽', label:'Nueva posición', puntos:0 });
+  if (section === 'mul')      cfg.multiplicadores.push({ tipo:'nuevo', label:'Nuevo tipo', x:1.0 });
+  if (section === 'bon')      cfg.bonus.push({ id:'bon'+Date.now(), emoji:'⭐', label:'Nueva bonificación', puntos:0 });
+  if (section === 'pen')      cfg.penalizaciones.push({ id:'pen'+Date.now(), emoji:'⚠️', label:'Nueva penalización', puntos:-10 });
+  localStorage.setItem(LS_PUNTOS, JSON.stringify(cfg));
+  renderRankingAdmin();
+}
+window.addBaremoRow = addBaremoRow;
+
+function removeBaremoRow(section, idx) {
+  const cfg = loadPuntosConfig();
+  if (section === 'pos' && cfg.posiciones.length > 1)     cfg.posiciones.splice(idx, 1);
+  if (section === 'mul' && cfg.multiplicadores.length > 1) cfg.multiplicadores.splice(idx, 1);
+  if (section === 'bon')  cfg.bonus.splice(idx, 1);
+  if (section === 'pen')  cfg.penalizaciones.splice(idx, 1);
+  localStorage.setItem(LS_PUNTOS, JSON.stringify(cfg));
+  renderRankingAdmin();
+}
+window.removeBaremoRow = removeBaremoRow;
 
 function resetPuntosConfig() {
   if (!confirm('¿Restaurar configuración de puntos por defecto?')) return;
@@ -911,28 +1099,31 @@ async function renderRankingAdmin() {
 
           <!-- PUNTOS POR POSICIÓN -->
           <div>
-            <div style="font-size:.7rem;font-weight:800;color:var(--n);letter-spacing:1px;text-transform:uppercase;margin-bottom:.7rem;padding-bottom:.4rem;border-bottom:2px solid var(--gl2)">Puntos base por posición</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem;padding-bottom:.4rem;border-bottom:2px solid var(--gl2)">
+              <span style="font-size:.7rem;font-weight:800;color:var(--n);letter-spacing:1px;text-transform:uppercase">Puntos base por posición</span>
+              <button onclick="addBaremoRow('pos')" class="btn-adm-sm ghost" style="font-size:.68rem">+ Añadir</button>
+            </div>
             ${cfg.posiciones.map((p, i) => `
-              <div style="display:flex;align-items:center;gap:.7rem;padding:.45rem 0;border-bottom:1px solid var(--gl2)">
-                <span style="font-size:1.1rem;width:1.6rem;flex-shrink:0">${p.emoji}</span>
-                <span style="flex:1;font-size:.82rem;color:var(--n)">${p.label}</span>
-                <div style="display:flex;align-items:center;gap:.35rem;flex-shrink:0">
-                  <input type="number" id="pt-pos-${i}" value="${p.puntos}" min="0" style="width:70px;text-align:right;border:1px solid var(--bd);border-radius:6px;padding:.28rem .45rem;font-size:.84rem;font-weight:700;color:var(--n)">
-                  <span style="font-size:.72rem;color:var(--gr)">pts</span>
-                </div>
+              <div style="display:grid;grid-template-columns:36px 1fr 70px 28px;gap:.4rem;padding:.35rem 0;border-bottom:1px solid var(--gl2);align-items:center">
+                <input type="text" id="pt-pos-emoji-${i}" value="${p.emoji||'🎽'}" style="border:1px solid var(--bd);border-radius:5px;padding:.25rem .3rem;font-size:.9rem;text-align:center;width:36px">
+                <input type="text" id="pt-pos-label-${i}" value="${p.label||''}" style="border:1px solid var(--bd);border-radius:5px;padding:.25rem .4rem;font-size:.78rem;color:var(--n)">
+                <input type="number" id="pt-pos-${i}" value="${p.puntos}" min="0" style="text-align:right;border:1px solid var(--bd);border-radius:6px;padding:.28rem .4rem;font-size:.82rem;font-weight:700;color:var(--n)">
+                <button onclick="removeBaremoRow('pos',${i})" style="background:#fee2e2;border:none;border-radius:5px;cursor:pointer;font-size:.9rem;padding:.2rem .3rem;color:#dc2626">✕</button>
               </div>`).join('')}
           </div>
 
           <!-- MULTIPLICADORES -->
           <div>
-            <div style="font-size:.7rem;font-weight:800;color:var(--n);letter-spacing:1px;text-transform:uppercase;margin-bottom:.7rem;padding-bottom:.4rem;border-bottom:2px solid var(--gl2)">Multiplicador por tipo de evento</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem;padding-bottom:.4rem;border-bottom:2px solid var(--gl2)">
+              <span style="font-size:.7rem;font-weight:800;color:var(--n);letter-spacing:1px;text-transform:uppercase">Multiplicador por tipo de evento</span>
+              <button onclick="addBaremoRow('mul')" class="btn-adm-sm ghost" style="font-size:.68rem">+ Añadir</button>
+            </div>
             ${cfg.multiplicadores.map((m, i) => `
-              <div style="display:flex;align-items:center;gap:.7rem;padding:.45rem 0;border-bottom:1px solid var(--gl2)">
-                <span style="flex:1;font-size:.82rem;color:var(--n)">${m.label}</span>
-                <div style="display:flex;align-items:center;gap:.35rem;flex-shrink:0">
-                  <span style="font-size:.8rem;color:var(--g);font-weight:700">×</span>
-                  <input type="number" id="pt-mul-${i}" value="${m.x}" min="0" step="0.1" max="5" style="width:60px;text-align:right;border:1px solid var(--bd);border-radius:6px;padding:.28rem .45rem;font-size:.84rem;font-weight:700;color:var(--n)">
-                </div>
+              <div style="display:grid;grid-template-columns:80px 1fr 55px 28px;gap:.4rem;padding:.35rem 0;border-bottom:1px solid var(--gl2);align-items:center">
+                <input type="text" id="pt-mul-tipo-${i}" value="${m.tipo||''}" placeholder="tipo" style="border:1px solid var(--bd);border-radius:5px;padding:.25rem .4rem;font-size:.72rem;font-weight:700;color:var(--gr)">
+                <input type="text" id="pt-mul-label-${i}" value="${m.label||''}" style="border:1px solid var(--bd);border-radius:5px;padding:.25rem .4rem;font-size:.78rem;color:var(--n)">
+                <input type="number" id="pt-mul-${i}" value="${m.x}" min="0" step="0.1" max="10" style="text-align:right;border:1px solid var(--bd);border-radius:6px;padding:.28rem .4rem;font-size:.82rem;font-weight:700;color:var(--n)">
+                <button onclick="removeBaremoRow('mul',${i})" style="background:#fee2e2;border:none;border-radius:5px;cursor:pointer;font-size:.9rem;padding:.2rem .3rem;color:#dc2626">✕</button>
               </div>`).join('')}
 
             <div style="margin-top:1.2rem;padding:.8rem;background:var(--of);border-radius:10px;border:1px solid var(--bd)">
@@ -951,29 +1142,34 @@ async function renderRankingAdmin() {
         <!-- BONUS Y PENALIZACIONES -->
         <div class="a2c" style="margin-bottom:1.5rem">
           <div>
-            <div style="font-size:.7rem;font-weight:800;color:#16a34a;letter-spacing:1px;text-transform:uppercase;margin-bottom:.7rem;padding-bottom:.4rem;border-bottom:2px solid #dcfce7">Bonificaciones especiales</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem;padding-bottom:.4rem;border-bottom:2px solid #dcfce7">
+              <span style="font-size:.7rem;font-weight:800;color:#16a34a;letter-spacing:1px;text-transform:uppercase">Bonificaciones especiales</span>
+              <button onclick="addBaremoRow('bon')" class="btn-adm-sm ghost" style="font-size:.68rem">+ Añadir</button>
+            </div>
             ${cfg.bonus.map((b, i) => `
-              <div style="display:flex;align-items:center;gap:.7rem;padding:.45rem 0;border-bottom:1px solid var(--gl2)">
-                <span style="font-size:1.1rem;width:1.6rem;flex-shrink:0">${b.emoji}</span>
-                <span style="flex:1;font-size:.8rem;color:var(--n)">${b.label}</span>
-                <div style="display:flex;align-items:center;gap:.35rem;flex-shrink:0">
-                  <span style="font-size:.72rem;color:#16a34a;font-weight:700">+</span>
-                  <input type="number" id="pt-bon-${i}" value="${b.puntos}" min="0" style="width:65px;text-align:right;border:1px solid #bbf7d0;border-radius:6px;padding:.28rem .45rem;font-size:.84rem;font-weight:700;color:#16a34a">
-                  <span style="font-size:.72rem;color:var(--gr)">pts</span>
-                </div>
+              <div style="display:grid;grid-template-columns:32px 32px 1fr 60px 28px;gap:.4rem;padding:.35rem 0;border-bottom:1px solid var(--gl2);align-items:center">
+                <input type="hidden" id="pt-bon-id-${i}" value="${b.id||'bon'+i}">
+                <input type="text" id="pt-bon-emoji-${i}" value="${b.emoji||'⭐'}" style="border:1px solid #bbf7d0;border-radius:5px;padding:.25rem .2rem;font-size:.9rem;text-align:center;width:32px">
+                <span></span>
+                <input type="text" id="pt-bon-label-${i}" value="${b.label||''}" style="border:1px solid #bbf7d0;border-radius:5px;padding:.25rem .4rem;font-size:.78rem;color:var(--n)">
+                <input type="number" id="pt-bon-${i}" value="${b.puntos}" min="0" style="text-align:right;border:1px solid #bbf7d0;border-radius:6px;padding:.28rem .4rem;font-size:.82rem;font-weight:700;color:#16a34a">
+                <button onclick="removeBaremoRow('bon',${i})" style="background:#fee2e2;border:none;border-radius:5px;cursor:pointer;font-size:.9rem;padding:.2rem .3rem;color:#dc2626">✕</button>
               </div>`).join('')}
           </div>
 
           <div>
-            <div style="font-size:.7rem;font-weight:800;color:#dc2626;letter-spacing:1px;text-transform:uppercase;margin-bottom:.7rem;padding-bottom:.4rem;border-bottom:2px solid #fee2e2">Penalizaciones</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem;padding-bottom:.4rem;border-bottom:2px solid #fee2e2">
+              <span style="font-size:.7rem;font-weight:800;color:#dc2626;letter-spacing:1px;text-transform:uppercase">Penalizaciones</span>
+              <button onclick="addBaremoRow('pen')" class="btn-adm-sm ghost" style="font-size:.68rem">+ Añadir</button>
+            </div>
             ${cfg.penalizaciones.map((p, i) => `
-              <div style="display:flex;align-items:center;gap:.7rem;padding:.45rem 0;border-bottom:1px solid var(--gl2)">
-                <span style="font-size:1.1rem;width:1.6rem;flex-shrink:0">${p.emoji}</span>
-                <span style="flex:1;font-size:.8rem;color:var(--n)">${p.label}</span>
-                <div style="display:flex;align-items:center;gap:.35rem;flex-shrink:0">
-                  <input type="number" id="pt-pen-${i}" value="${p.puntos}" max="0" style="width:65px;text-align:right;border:1px solid #fecaca;border-radius:6px;padding:.28rem .45rem;font-size:.84rem;font-weight:700;color:#dc2626">
-                  <span style="font-size:.72rem;color:var(--gr)">pts</span>
-                </div>
+              <div style="display:grid;grid-template-columns:32px 32px 1fr 60px 28px;gap:.4rem;padding:.35rem 0;border-bottom:1px solid var(--gl2);align-items:center">
+                <input type="hidden" id="pt-pen-id-${i}" value="${p.id||'pen'+i}">
+                <input type="text" id="pt-pen-emoji-${i}" value="${p.emoji||'🚫'}" style="border:1px solid #fecaca;border-radius:5px;padding:.25rem .2rem;font-size:.9rem;text-align:center;width:32px">
+                <span></span>
+                <input type="text" id="pt-pen-label-${i}" value="${p.label||''}" style="border:1px solid #fecaca;border-radius:5px;padding:.25rem .4rem;font-size:.78rem;color:var(--n)">
+                <input type="number" id="pt-pen-${i}" value="${p.puntos}" max="0" style="text-align:right;border:1px solid #fecaca;border-radius:6px;padding:.28rem .4rem;font-size:.82rem;font-weight:700;color:#dc2626">
+                <button onclick="removeBaremoRow('pen',${i})" style="background:#fee2e2;border:none;border-radius:5px;cursor:pointer;font-size:.9rem;padding:.2rem .3rem;color:#dc2626">✕</button>
               </div>`).join('')}
 
             <!-- CALCULADORA -->
@@ -1396,9 +1592,41 @@ function renderPortada() {
       </div>
     </div>
 
+    <!-- REDES SOCIALES -->
+    <div class="acard" style="margin-top:1rem" id="card-redes">
+      <div class="acard-hd">
+        <div>
+          <div class="acard-ti">📱 Redes sociales</div>
+          <div style="font-size:.72rem;color:var(--gr);margin-top:.15rem">Las URLs aparecerán en el footer y en el botón "Ver Instagram" de la galería</div>
+        </div>
+        <button class="btn-adm-gold" onclick="saveRedes()">Guardar redes</button>
+      </div>
+      <div class="acard-bd" id="redes-body">
+        <div style="font-size:.75rem;color:var(--gr);padding:1rem;text-align:center">Cargando...</div>
+      </div>
+    </div>
+
+    <!-- GALERÍA -->
+    <div class="acard" style="margin-top:1rem" id="card-galeria">
+      <div class="acard-hd">
+        <div>
+          <div class="acard-ti">🖼️ Galería "AEMTKD en acción"</div>
+          <div style="font-size:.72rem;color:var(--gr);margin-top:.15rem">Hasta 5 imágenes · máx. 2 MB por imagen</div>
+        </div>
+        <button class="btn-adm-gold" onclick="saveGaleria()">Guardar galería</button>
+      </div>
+      <div class="acard-bd" id="galeria-body">
+        <div style="font-size:.75rem;color:var(--gr);padding:1rem;text-align:center">Cargando...</div>
+      </div>
+    </div>
+
     <div style="margin-top:1rem">
       <button class="m-fsb" onclick="savePortada()">💾 Guardar y publicar cambios en la portada</button>
     </div>`;
+
+  // Load and render redes + galeria async after main HTML is injected
+  fetchConfig('redes').then(redes => renderRedesAdmin(redes || {}));
+  fetchConfig('galeria').then(items => renderGaleriaAdmin(Array.isArray(items) ? items : []));
 }
 
 function savePortada() {
@@ -1435,6 +1663,109 @@ function resetPortada() {
 }
 window.resetPortada = resetPortada;
 
+// ── REDES SOCIALES ────────────────────────────────────────
+const REDES_DEF = [
+  { key:'instagram', icon:'📸', label:'Instagram', placeholder:'https://instagram.com/aemtkd' },
+  { key:'facebook',  icon:'👥', label:'Facebook',  placeholder:'https://facebook.com/aemtkd' },
+  { key:'youtube',   icon:'▶️', label:'YouTube',   placeholder:'https://youtube.com/@aemtkd' },
+  { key:'x',         icon:'𝕏', label:'X (Twitter)',placeholder:'https://x.com/aemtkd' },
+  { key:'whatsapp',  icon:'💬', label:'WhatsApp',  placeholder:'https://wa.me/34600000000' },
+  { key:'tiktok',    icon:'🎵', label:'TikTok',    placeholder:'https://tiktok.com/@aemtkd' },
+  { key:'telegram',  icon:'✈️', label:'Telegram',  placeholder:'https://t.me/aemtkd' },
+];
+
+let _redesCfg = {};
+
+function renderRedesAdmin(redes) {
+  _redesCfg = redes;
+  const body = q('#redes-body');
+  if (!body) return;
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:.7rem">
+      ${REDES_DEF.map(r => `
+      <div style="display:flex;align-items:center;gap:.6rem">
+        <span style="font-size:1.2rem;width:1.8rem;text-align:center;flex-shrink:0">${r.icon}</span>
+        <div style="flex:1">
+          <label style="font-size:.72rem;font-weight:700;color:var(--gr);display:block;margin-bottom:.2rem">${r.label}</label>
+          <input type="url" id="red-${r.key}" value="${redes[r.key]||''}" placeholder="${r.placeholder}"
+            style="width:100%;border:1px solid var(--bd);border-radius:7px;padding:.35rem .6rem;font-size:.78rem;color:var(--n)">
+        </div>
+      </div>`).join('')}
+    </div>
+    <p style="font-size:.72rem;color:var(--gr);margin-top:.8rem">Deja vacío para ocultar el icono. Los cambios se reflejan en el footer y en el botón de Instagram de la galería.</p>`;
+}
+window.renderRedesAdmin = renderRedesAdmin;
+
+async function saveRedes() {
+  const redes = {};
+  REDES_DEF.forEach(r => {
+    const val = q(`#red-${r.key}`)?.value.trim();
+    if (val) redes[r.key] = val;
+  });
+  const { error } = await saveConfig('redes', redes);
+  if (error) toast('⚠️ Solo local — Error: ' + (error.message || error.code));
+  else toast('✅ Redes sociales guardadas y publicadas');
+}
+window.saveRedes = saveRedes;
+
+// ── GALERÍA ───────────────────────────────────────────────
+let _galeriaItems = [];
+
+function renderGaleriaAdmin(items) {
+  _galeriaItems = items.length ? items : Array(5).fill(null).map(() => ({ imagen: null, caption: '' }));
+  // Pad to 5 slots
+  while (_galeriaItems.length < 5) _galeriaItems.push({ imagen: null, caption: '' });
+  _galeriaItems = _galeriaItems.slice(0, 5);
+
+  const body = q('#galeria-body');
+  if (!body) return;
+  body.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem">
+      ${_galeriaItems.map((item, i) => `
+      <div style="border:2px dashed var(--gl2);border-radius:10px;overflow:hidden;aspect-ratio:1;position:relative;background:#0D1E38;cursor:pointer" onclick="pickGaleriaImg(${i})">
+        ${item.imagen
+          ? `<img src="${item.imagen}" style="width:100%;height:100%;object-fit:cover;display:block">`
+          : `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:.4rem;color:rgba(255,255,255,.4)">
+               <span style="font-size:2rem">📷</span>
+               <span style="font-size:.72rem">Foto ${i+1} — clic para subir</span>
+             </div>`
+        }
+        ${item.imagen ? `<button onclick="event.stopPropagation();quitarGaleriaImg(${i})" style="position:absolute;top:5px;right:5px;background:#dc2626;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;color:white;font-size:.7rem;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>` : ''}
+      </div>
+      <input type="text" id="gal-cap-${i}" value="${(item.caption||'').replace(/"/g,'&quot;')}" placeholder="Pie de foto ${i+1}"
+        style="border:1px solid var(--bd);border-radius:7px;padding:.3rem .5rem;font-size:.76rem;width:100%;margin-top:.3rem">`).join('')}
+    </div>
+    <p style="font-size:.72rem;color:var(--gr);margin-top:.8rem">Haz clic en un hueco para subir una foto. Máx. 2 MB. Las imágenes se muestran en la sección "AEMTKD en acción" de la web.</p>`;
+}
+window.renderGaleriaAdmin = renderGaleriaAdmin;
+
+function pickGaleriaImg(idx) {
+  pickFile('.jpg,.jpeg,.png,.webp,.gif', archivo => {
+    _galeriaItems[idx] = { ..._galeriaItems[idx], imagen: archivo.url };
+    renderGaleriaAdmin(_galeriaItems);
+  });
+}
+window.pickGaleriaImg = pickGaleriaImg;
+
+function quitarGaleriaImg(idx) {
+  _galeriaItems[idx] = { imagen: null, caption: _galeriaItems[idx].caption || '' };
+  renderGaleriaAdmin(_galeriaItems);
+}
+window.quitarGaleriaImg = quitarGaleriaImg;
+
+async function saveGaleria() {
+  // Read captions from current inputs
+  const items = _galeriaItems.map((item, i) => ({
+    imagen:  item.imagen || null,
+    caption: q(`#gal-cap-${i}`)?.value.trim() || '',
+  })).filter(item => item.imagen || item.caption);
+
+  const { error } = await saveConfig('galeria', items);
+  if (error) toast('⚠️ Solo local — Error: ' + (error.message || error.code));
+  else toast('✅ Galería guardada y publicada');
+}
+window.saveGaleria = saveGaleria;
+
 // ── FINANZAS ──────────────────────────────────────────────
 const LS_FIN = 'aemt_finanzas';
 
@@ -1459,6 +1790,100 @@ function saveMovimientos(data) {
 }
 
 const FIN_CATS = ['cuotas','eventos','subvenciones','patrocinio','seguros','constitucion','tecnologia','material','viajes','otros'];
+
+// ── PREVISIÓN ANUAL ────────────────────────────────────────
+function renderPrevisionAnualHtml(movs) {
+  const recurrentes = movs.filter(m => m.recurrente);
+  if (!recurrentes.length) return '';
+
+  // Multiply each recurring item to get annual contribution
+  const periodMultiplier = { mensual: 12, trimestral: 4, semestral: 2, anual: 1 };
+
+  const totalIngAn = recurrentes
+    .filter(m => m.tipo === 'ingreso')
+    .reduce((s, m) => s + Number(m.importe) * (periodMultiplier[m.periodo] || 1), 0);
+  const totalGasAn = recurrentes
+    .filter(m => m.tipo === 'gasto')
+    .reduce((s, m) => s + Number(m.importe) * (periodMultiplier[m.periodo] || 1), 0);
+  const saldoAn = totalIngAn - totalGasAn;
+
+  // Monthly breakdown — spread each recurring item across months
+  const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const monthlyIng = new Array(12).fill(0);
+  const monthlyGas = new Array(12).fill(0);
+
+  recurrentes.forEach(m => {
+    const mult = periodMultiplier[m.periodo] || 1;
+    const perMonth = Number(m.importe) / (12 / mult); // importe per occurrence spread monthly
+    for (let i = 0; i < 12; i++) {
+      if (m.tipo === 'ingreso') monthlyIng[i] += perMonth;
+      else monthlyGas[i] += perMonth;
+    }
+  });
+
+  const maxBar = Math.max(...monthlyIng, ...monthlyGas, 1);
+
+  const rows = recurrentes.map(m => {
+    const veces = periodMultiplier[m.periodo] || 1;
+    const anual = Number(m.importe) * veces;
+    return `<tr>
+      <td style="font-size:.78rem;color:var(--gr)">${m.concepto}</td>
+      <td><span style="font-size:.68rem;font-weight:700;padding:.15rem .4rem;border-radius:4px;background:${m.tipo==='ingreso'?'#dcfce7':'#fee2e2'};color:${m.tipo==='ingreso'?'#16a34a':'#dc2626'}">${m.tipo==='ingreso'?'↑':'↓'} ${m.tipo}</span></td>
+      <td style="font-size:.78rem;color:var(--gr)">${m.periodo||'—'}</td>
+      <td style="text-align:right;font-size:.8rem;font-weight:600">${Number(m.importe).toLocaleString('es-ES')}€</td>
+      <td style="text-align:right;font-size:.8rem;font-weight:700;color:${m.tipo==='ingreso'?'#16a34a':'#dc2626'}">${m.tipo==='ingreso'?'+':'-'}${anual.toLocaleString('es-ES')}€</td>
+      <td style="font-size:.75rem;color:var(--gr)">${m.proximo_vencimiento||'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const barChart = months.map((mo, i) => {
+    const ingPct = Math.round((monthlyIng[i] / maxBar) * 80);
+    const gasPct = Math.round((monthlyGas[i] / maxBar) * 80);
+    const netMo  = monthlyIng[i] - monthlyGas[i];
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;flex:1">
+      <div style="font-size:.58rem;color:var(--gr);margin-bottom:2px">${netMo>=0?'+':''}${Math.round(netMo)}€</div>
+      <div style="display:flex;gap:2px;align-items:flex-end;height:80px">
+        <div title="Ingresos ${mo}" style="width:10px;background:#16a34a;border-radius:3px 3px 0 0;height:${ingPct}px"></div>
+        <div title="Gastos ${mo}"   style="width:10px;background:#dc2626;border-radius:3px 3px 0 0;height:${gasPct}px"></div>
+      </div>
+      <div style="font-size:.62rem;color:var(--gr)">${mo}</div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="acard" style="margin-top:1.2rem">
+    <div class="acard-hd">
+      <div class="acard-ti">🔄 Previsión anual — Pagos recurrentes</div>
+    </div>
+
+    <div class="kpi-r" style="margin-bottom:1.2rem">
+      <div class="kpi"><div class="kpi-lb">Ingresos anuales</div><div class="kpi-vl" style="color:#16a34a">+${totalIngAn.toLocaleString('es-ES')}€</div><div class="kpi-tr tg">Recurrentes</div></div>
+      <div class="kpi"><div class="kpi-lb">Gastos anuales</div><div class="kpi-vl" style="color:#dc2626">-${totalGasAn.toLocaleString('es-ES')}€</div><div class="kpi-tr tn">Recurrentes</div></div>
+      <div class="kpi"><div class="kpi-lb">Saldo proyectado</div><div class="kpi-vl" style="color:${saldoAn>=0?'#16a34a':'#dc2626'}">${saldoAn>=0?'+':''}${saldoAn.toLocaleString('es-ES')}€</div><div class="kpi-tr ${saldoAn>=0?'tu':'tn'}">${saldoAn>=0?'Superávit':'Déficit'}</div></div>
+      <div class="kpi"><div class="kpi-lb">Conceptos recurrentes</div><div class="kpi-vl">${recurrentes.length}</div><div class="kpi-tr tg">Activos</div></div>
+    </div>
+
+    <!-- Gráfico mensual -->
+    <div style="padding:1rem;background:var(--of);border-radius:10px;margin-bottom:1.2rem">
+      <div style="font-size:.75rem;font-weight:700;color:var(--gr);margin-bottom:.7rem">Distribución mensual proyectada</div>
+      <div style="display:flex;gap:4px;align-items:flex-end">
+        ${barChart}
+      </div>
+      <div style="display:flex;gap:1rem;margin-top:.5rem;font-size:.68rem;color:var(--gr)">
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#16a34a;border-radius:2px;display:inline-block"></span>Ingresos</span>
+        <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:#dc2626;border-radius:2px;display:inline-block"></span>Gastos</span>
+      </div>
+    </div>
+
+    <!-- Tabla de recurrentes -->
+    <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr><th>Concepto</th><th>Tipo</th><th>Período</th><th style="text-align:right">Importe</th><th style="text-align:right">Anual</th><th>Próx. vencimiento</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
 
 function renderFinanzas() {
   const movs = loadMovimientos();
@@ -1522,7 +1947,9 @@ function renderFinanzas() {
 
     <div style="margin-top:1rem;padding:.8rem 1rem;background:#f0f9ff;border-radius:10px;border:1px solid #bae6fd;font-size:.75rem;color:#0369a1">
       💡 <strong>Importar CSV/Excel:</strong> El archivo debe tener columnas: <code>fecha, concepto, tipo (ingreso/gasto), importe, categoria, notas</code>. Los movimientos importados se añaden a los existentes.
-    </div>`;
+    </div>
+
+    ${renderPrevisionAnualHtml(movs)}`;
 }
 
 function finFiltrar(f) {
@@ -1553,7 +1980,30 @@ function movimientoFormHtml(m = {}) {
         </select>
       </div>
     </div>
-    <div class="fg"><label>Notas</label><textarea id="fm-no" style="height:60px" placeholder="Observaciones...">${m.notas||''}</textarea></div>
+
+    <!-- RECURRENCIA -->
+    <div style="padding:.7rem;background:var(--of);border-radius:8px;border:1px solid var(--bd);margin-bottom:.8rem">
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.82rem;cursor:pointer;margin-bottom:.5rem">
+        <input type="checkbox" id="fm-rec" ${m.recurrente?'checked':''} style="accent-color:var(--n)"> Pago/cobro recurrente
+      </label>
+      <div class="fr" style="margin-bottom:0">
+        <div class="fg" style="margin-bottom:0">
+          <label style="font-size:.72rem">Período</label>
+          <select id="fm-per">
+            <option value="mensual"    ${m.periodo==='mensual'?'selected':''}>Mensual</option>
+            <option value="trimestral" ${m.periodo==='trimestral'?'selected':''}>Trimestral</option>
+            <option value="semestral"  ${m.periodo==='semestral'?'selected':''}>Semestral</option>
+            <option value="anual"      ${m.periodo==='anual'||!m.periodo?'selected':''}>Anual</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label style="font-size:.72rem">Próximo vencimiento</label>
+          <input type="date" id="fm-prox" value="${m.proximo_vencimiento||''}">
+        </div>
+      </div>
+    </div>
+
+    <div class="fg"><label>Notas</label><textarea id="fm-no" style="height:55px" placeholder="Observaciones...">${m.notas||''}</textarea></div>
     <button class="m-fsb" onclick="saveMovimiento('${m.id||''}')">Guardar</button>`;
 }
 
@@ -1574,14 +2024,18 @@ function saveMovimiento(id) {
   if (!importe || importe <= 0) { toast('⚠️ El importe debe ser mayor que 0'); return; }
 
   const movs = loadMovimientos();
+  const recurrente = q('#fm-rec').checked;
   const mov = {
-    id:        id || ('f' + Date.now()),
-    fecha:     q('#fm-fe').value,
+    id:                  id || ('f' + Date.now()),
+    fecha:               q('#fm-fe').value,
     concepto,
-    tipo:      q('#fm-tp').value,
+    tipo:                q('#fm-tp').value,
     importe,
-    categoria: q('#fm-ca').value,
-    notas:     q('#fm-no').value.trim(),
+    categoria:           q('#fm-ca').value,
+    notas:               q('#fm-no').value.trim(),
+    recurrente,
+    periodo:             recurrente ? q('#fm-per').value : null,
+    proximo_vencimiento: recurrente ? (q('#fm-prox').value || null) : null,
   };
 
   if (id) {
@@ -2139,6 +2593,150 @@ const LEGAL_DOCS = [
   { d:'AEMT Gestión SL',          v:'Capital mínimo 3.000€',           s:'📋 Mes 2',   c:'var(--n)',   a:'Notaría + Registro Mercantil Madrid' },
   { d:'Marca AEMT (OEPM)',        v:'Clases 41, 35, 36',               s:'📋 Mes 2-3', c:'var(--n)',   a:'oepm.es · ~550€' },
 ];
+
+// ── DESCUENTOS ────────────────────────────────────────────
+const LS_DESC = 'aemt_descuentos';
+
+function loadDescuentos() {
+  try {
+    const raw = localStorage.getItem(LS_DESC);
+    if (raw) { const d = JSON.parse(raw); if (Array.isArray(d)) return d; }
+    return [];
+  } catch { return []; }
+}
+function saveDescuentosData(data) { localStorage.setItem(LS_DESC, JSON.stringify(data)); }
+
+function renderDescuentos() {
+  const codes = loadDescuentos();
+
+  q('#admMain').innerHTML = `
+    <div class="adm-topbar">
+      <div class="adm-tt"><h2>Códigos de Descuento</h2><p>${codes.length} códigos · ${codes.filter(c=>c.activo).length} activos</p></div>
+      <button class="btn-adm-gold" onclick="openNuevoDescuento()">+ Nuevo código</button>
+    </div>
+
+    <div class="acard">
+      <div class="acard-hd"><div class="acard-ti">Códigos activos</div></div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr><th>Código</th><th>Descuento</th><th>Aplica a</th><th>Usos</th><th>Caducidad</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody>
+            ${codes.length ? codes.map(c => {
+              const valorStr = c.tipo === 'porcentaje' ? `${c.valor}%` : `${c.valor}€`;
+              const planes = Array.isArray(c.planes) && c.planes.length ? c.planes.join(', ') : 'Todos los planes';
+              const usosStr = c.max_usos ? `${c.usos_actuales||0}/${c.max_usos}` : `${c.usos_actuales||0}/∞`;
+              const caducidad = c.fecha_caducidad || '—';
+              return `<tr>
+                <td><span style="font-family:monospace;font-size:.88rem;font-weight:800;color:var(--g);background:var(--of);padding:.2rem .55rem;border-radius:5px">${c.codigo}</span></td>
+                <td style="font-weight:800;font-size:.88rem;color:${c.tipo==='porcentaje'?'#7c3aed':'#0369a1'}">${valorStr} ${c.tipo==='porcentaje'?'dto.':'de descuento'}</td>
+                <td style="font-size:.78rem;color:var(--gr)">${planes}</td>
+                <td style="font-size:.8rem">${usosStr}</td>
+                <td style="font-size:.78rem;color:var(--gr)">${caducidad}</td>
+                <td><span class="sp ${c.activo?'sp-a':'sp-i'}">${c.activo?'Activo':'Inactivo'}</span></td>
+                <td style="display:flex;gap:.35rem">
+                  <button class="btn-adm-sm ghost" onclick="editDescuento('${c.id}')">Editar</button>
+                  <button class="btn-adm-sm danger" onclick="deleteDescuento('${c.id}')">Borrar</button>
+                </td>
+              </tr>`;
+            }).join('') : `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--gr)">Sin códigos de descuento</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem;padding:.8rem 1rem;background:#f0f9ff;border-radius:10px;border:1px solid #bae6fd;font-size:.75rem;color:#0369a1">
+      💡 Los códigos se aplican en el formulario de adhesión de la web pública. El descuento se resta de la cuota antes del pago.
+    </div>`;
+}
+
+function descuentoFormHtml(c = {}) {
+  const isEdit = !!c.id;
+  const planesOpts = ['estandar','joven','colaborador','fundador'].map(p =>
+    `<label style="display:flex;align-items:center;gap:.4rem;font-size:.82rem;cursor:pointer">
+      <input type="checkbox" name="desc-plan" value="${p}" ${(c.planes||[]).includes(p)?'checked':''} style="accent-color:var(--n)">
+      ${p.charAt(0).toUpperCase()+p.slice(1)}
+    </label>`).join('');
+  return `
+    <div class="m-ti">${isEdit ? 'Editar código' : 'Nuevo código de descuento'}</div>
+    <div class="fr">
+      <div class="fg"><label>Código *</label><input type="text" id="dc-cod" value="${c.codigo||''}" placeholder="Ej: FUNDADOR50" style="font-family:monospace;font-weight:700;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="fg"><label>Tipo de descuento</label>
+        <select id="dc-tipo">
+          <option value="porcentaje" ${c.tipo==='porcentaje'||!c.tipo?'selected':''}>Porcentaje (%)</option>
+          <option value="importe" ${c.tipo==='importe'?'selected':''}>Importe fijo (€)</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Valor *</label><input type="number" id="dc-val" value="${c.valor||''}" min="0" step="0.01" placeholder="Ej: 50 (para 50% o 50€)"></div>
+      <div class="fg"><label>Máx. usos (vacío = ilimitado)</label><input type="number" id="dc-max" value="${c.max_usos||''}" min="0" placeholder="Ej: 25"></div>
+    </div>
+    <div class="fg"><label>Fecha caducidad (opcional)</label><input type="date" id="dc-cad" value="${c.fecha_caducidad||''}"></div>
+    <div class="fg">
+      <label style="margin-bottom:.4rem;display:block">Aplica a (vacío = todos los planes)</label>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">${planesOpts}</div>
+    </div>
+    <div class="fg"><label>Descripción / uso previsto</label><input type="text" id="dc-desc" value="${c.descripcion||''}" placeholder="Ej: Para medallistas WMG 2025"></div>
+    <label style="display:flex;align-items:center;gap:.5rem;font-size:.82rem;cursor:pointer;margin-bottom:.8rem">
+      <input type="checkbox" id="dc-act" ${c.activo!==false?'checked':''} style="accent-color:var(--n)"> Código activo
+    </label>
+    <button class="m-fsb" onclick="saveDescuento('${c.id||''}')">Guardar código</button>`;
+}
+
+function openNuevoDescuento() { openModal(descuentoFormHtml()); }
+window.openNuevoDescuento = openNuevoDescuento;
+
+function editDescuento(id) {
+  const c = loadDescuentos().find(x => x.id === id);
+  if (!c) return;
+  openModal(descuentoFormHtml(c));
+}
+window.editDescuento = editDescuento;
+
+function saveDescuento(id) {
+  const codigo = q('#dc-cod').value.trim().toUpperCase();
+  const valor  = parseFloat(q('#dc-val').value);
+  if (!codigo) { toast('⚠️ El código es obligatorio'); return; }
+  if (!valor || valor <= 0) { toast('⚠️ El valor debe ser mayor que 0'); return; }
+
+  const planes = [...document.querySelectorAll('input[name="desc-plan"]:checked')].map(el => el.value);
+  const codes  = loadDescuentos();
+
+  // Check duplicate
+  const dup = codes.find(c => c.codigo === codigo && c.id !== id);
+  if (dup) { toast('⚠️ Ya existe un código con ese nombre'); return; }
+
+  const updated = {
+    id:              id || ('dc' + Date.now()),
+    codigo,
+    tipo:            q('#dc-tipo').value,
+    valor,
+    max_usos:        parseInt(q('#dc-max').value) || null,
+    fecha_caducidad: q('#dc-cad').value || null,
+    planes:          planes.length ? planes : [],
+    descripcion:     q('#dc-desc').value.trim(),
+    activo:          q('#dc-act').checked,
+    usos_actuales:   id ? (codes.find(c=>c.id===id)?.usos_actuales||0) : 0,
+    creado_en:       id ? (codes.find(c=>c.id===id)?.creado_en||new Date().toISOString()) : new Date().toISOString(),
+  };
+
+  if (id) saveDescuentosData(codes.map(c => c.id === id ? updated : c));
+  else saveDescuentosData([...codes, updated]);
+
+  closeModal();
+  toast('✅ Código guardado');
+  renderDescuentos();
+}
+window.saveDescuento = saveDescuento;
+
+function deleteDescuento(id) {
+  const c = loadDescuentos().find(x => x.id === id);
+  if (!confirm(`¿Eliminar el código "${c?.codigo||id}"?`)) return;
+  saveDescuentosData(loadDescuentos().filter(x => x.id !== id));
+  toast('✅ Código eliminado');
+  renderDescuentos();
+}
+window.deleteDescuento = deleteDescuento;
 
 // ── PAGOS ─────────────────────────────────────────────────
 async function renderPagos() {
