@@ -587,6 +587,65 @@ async function submitEventForm(titulo) {
 }
 window.submitEventForm = submitEventForm;
 
+// ── DISCOUNT CODE ─────────────────────────────────────────
+const PLAN_PRECIOS = { estandar: 60, joven: 60, colaborador: 60 };
+let _descuentoAplicado = null;
+
+function aplicarDescuento() {
+  const codigo = (q('#f-desc')?.value || '').trim().toUpperCase();
+  const msgEl  = q('#desc-msg');
+  if (!msgEl) return;
+
+  if (!codigo) {
+    _descuentoAplicado = null;
+    msgEl.innerHTML = '';
+    return;
+  }
+
+  const todos = JSON.parse(localStorage.getItem('aemt_descuentos') || '[]');
+  const desc  = todos.find(d => d.codigo.toUpperCase() === codigo);
+
+  if (!desc) {
+    _descuentoAplicado = null;
+    msgEl.innerHTML = '<span style="color:#ef4444">❌ Código no válido</span>';
+    return;
+  }
+  if (!desc.activo) {
+    _descuentoAplicado = null;
+    msgEl.innerHTML = '<span style="color:#ef4444">❌ Este código está desactivado</span>';
+    return;
+  }
+  if (desc.caducidad && new Date(desc.caducidad) < new Date()) {
+    _descuentoAplicado = null;
+    msgEl.innerHTML = '<span style="color:#ef4444">❌ Código caducado</span>';
+    return;
+  }
+  if (desc.usos_max && desc.usos >= desc.usos_max) {
+    _descuentoAplicado = null;
+    msgEl.innerHTML = '<span style="color:#ef4444">❌ Este código ha alcanzado el límite de usos</span>';
+    return;
+  }
+
+  const planSel = q('#f-plan')?.value;
+  if (desc.planes && desc.planes.length && !desc.planes.includes(planSel)) {
+    _descuentoAplicado = null;
+    msgEl.innerHTML = `<span style="color:#f59e0b">⚠️ Este código no aplica al plan seleccionado</span>`;
+    return;
+  }
+
+  _descuentoAplicado = desc;
+  const precioBase = PLAN_PRECIOS[planSel] || 60;
+  const ahorro = desc.tipo === 'porcentaje'
+    ? Math.round(precioBase * desc.valor / 100 * 100) / 100
+    : Math.min(Number(desc.valor), precioBase);
+  const precioFinal = Math.max(0, precioBase - ahorro);
+  const detalle = desc.tipo === 'porcentaje' ? `${desc.valor}% dto.` : `${desc.valor}€ dto.`;
+
+  msgEl.innerHTML = `<span style="color:#16a34a;font-weight:700">✅ Código aplicado — ${detalle} → precio final: <strong>${precioFinal}€</strong></span>`;
+  toast(`✅ Descuento aplicado: ${detalle}`);
+}
+window.aplicarDescuento = aplicarDescuento;
+
 // ── MEMBERSHIP FORM ───────────────────────────────────────
 async function subMem() {
   // Honeypot anti-spam: si el campo trampa tiene valor, es un bot
@@ -636,7 +695,8 @@ async function subMem() {
     sepa_iban: q('#sepa-iban')?.value.trim().replace(/\s/g,'').toUpperCase(),
     sepa_bic: q('#sepa-bic')?.value.trim(),
   } : {};
-  const { error } = await submitMembership({ nombre, apellidos, email, telefono, ccaa, plan, grado, metodo_pago: metodoPago, ...pagoExtra });
+  const codigoDesc = _descuentoAplicado?.codigo || null;
+  const { error } = await submitMembership({ nombre, apellidos, email, telefono, ccaa, plan, grado, metodo_pago: metodoPago, codigo_descuento: codigoDesc, ...pagoExtra });
 
   btn.textContent = 'Enviar Solicitud de Adhesión'; btn.disabled = false;
 
@@ -662,6 +722,9 @@ async function subMem() {
     q('#f-tel').value = '';
     q('#f-ccaa').value = '';
     q('#f-grado').value = '';
+    if (q('#f-desc')) q('#f-desc').value = '';
+    if (q('#desc-msg')) q('#desc-msg').innerHTML = '';
+    _descuentoAplicado = null;
     ckp.checked = false;
     q('#cki').checked = false;
   }

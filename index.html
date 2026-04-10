@@ -328,6 +328,16 @@
             </div>
           </div>
 
+          <!-- Código descuento -->
+          <div class="fg" style="margin-top:.2rem">
+            <label>Código descuento (opcional)</label>
+            <div style="display:flex;gap:.5rem">
+              <input type="text" id="f-desc" placeholder="AEMTKD2026" style="text-transform:uppercase;letter-spacing:1px;flex:1" oninput="this.value=this.value.toUpperCase()">
+              <button type="button" onclick="aplicarDescuento()" style="padding:.5rem 1rem;background:rgba(200,148,42,.15);border:1px solid rgba(200,148,42,.4);color:#c8942a;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap">Aplicar</button>
+            </div>
+            <div id="desc-msg" style="margin-top:.4rem;font-size:.78rem;min-height:1.2rem"></div>
+          </div>
+
           <div class="fck">
             <input type="checkbox" id="ckp">
             <label for="ckp">He leído y acepto la <a href="#" onclick="openLegalModal('privacidad');return false;">política de privacidad</a> y los
@@ -586,10 +596,10 @@
 <!-- Supabase CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <!-- AEMT scripts -->
-<script src="js/config.js?v=10"></script>
-<script src="js/supabase-client.js?v=10"></script>
+<script src="js/config.js?v=12"></script>
+<script src="js/supabase-client.js?v=12"></script>
 <script src="js/particles.js?v=10"></script>
-<script src="js/main.js?v=10"></script>
+<script src="js/main.js?v=12"></script>
 
 </body>
 </html>
