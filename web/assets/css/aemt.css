@@ -309,7 +309,12 @@ section[id] { scroll-margin-top: 0; }
 .categoria b { display: block; font-family: var(--display); font-weight: 400; font-size: 2.3rem; line-height: 1; color: var(--azul-850); letter-spacing: .02em; }
 .categoria span { font-size: .92rem; color: var(--gris); }
 .categoria::after { content: ''; position: absolute; right: -18px; top: -18px; width: 64px; height: 64px; border-radius: 50%; border: 2px solid rgba(200,148,42,.25); }
+.categoria span { display: block; }
+.categoria .categoria__generos { margin-top: .7rem; font-size: .76rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--oro); }
+.categoria--doble { grid-column: span 2; }
 .categoria--oro { background: var(--azul-850); border-color: var(--azul-850); }
+.categoria--oro .categoria__generos { color: var(--oro-claro); }
+@media (max-width: 600px) { .categoria--doble { grid-column: span 2; } }
 .categoria--oro b { color: var(--oro-claro); }
 .categoria--oro span { color: rgba(255,255,255,.75); }
 .reglas { margin-top: 2rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4rem; }
