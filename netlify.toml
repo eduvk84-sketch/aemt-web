@@ -1,78 +1,83 @@
 # ============================================================
 # AEMT — netlify.toml
-# Configuración de despliegue en Netlify
+# Se publica SOLO la carpeta «web». Lo demás (documentos, la web
+# antigua en «archivo») no sale a internet.
 # ============================================================
 
 [build]
-  publish = "."
+  publish = "web"
 
-# ── FORZAR HTTPS ─────────────────────────────────────────
+# ── HTTPS y dominio único ────────────────────────────────────
 [[redirects]]
   from = "http://aemtkd.es/*"
-  to   = "https://aemtkd.es/:splat"
+  to = "https://aemtkd.es/:splat"
   status = 301
-  force  = true
+  force = true
 
 [[redirects]]
   from = "http://www.aemtkd.es/*"
-  to   = "https://aemtkd.es/:splat"
+  to = "https://aemtkd.es/:splat"
   status = 301
-  force  = true
+  force = true
 
-# ── CABECERAS DE SEGURIDAD (todas las páginas) ────────────
+[[redirects]]
+  from = "https://www.aemtkd.es/*"
+  to = "https://aemtkd.es/:splat"
+  status = 301
+  force = true
+
+# ── El panel antiguo ya no existe: la Junta entra por Magestro ──
+[[redirects]]
+  from = "/admin"
+  to = "https://magestro.es/login"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/admin.html"
+  to = "https://magestro.es/login"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/login"
+  to = "https://magestro.es/login"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/login.html"
+  to = "https://magestro.es/login"
+  status = 301
+  force = true
+
+# ── Cabeceras de seguridad (todas las páginas) ────────────────
+# Todo se sirve desde la propia web: ni fuentes, ni scripts, ni
+# analítica de terceros. El único destino externo es Magestro.
 [[headers]]
   for = "/*"
   [headers.values]
-    # Clickjacking
-    X-Frame-Options = "DENY"
-    # MIME sniffing
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     X-Content-Type-Options = "nosniff"
-    # Referrer
+    X-Frame-Options = "DENY"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    # Permisos de hardware
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
-    # HSTS — fuerza HTTPS durante 1 año incluyendo subdominios
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
-    # CSP — permite exactamente lo necesario, nada más
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://oyhbdzefmofijaaerpkn.supabase.co https://oyhbdzefmofijaaerpkn.supabase.co; frame-ancestors 'none';"
-    # Cross-domain
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    Cross-Origin-Opener-Policy = "same-origin"
     X-Permitted-Cross-Domain-Policies = "none"
 
-# ── CACHE: assets estáticos (1 año) ──────────────────────
+# ── Caché ────────────────────────────────────────────────────
 [[headers]]
-  for = "/css/*"
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+[[headers]]
+  for = "/assets/fonts/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-[[headers]]
-  for = "/js/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-# ── CACHE: HTML (sin caché, siempre fresco) ──────────────
 [[headers]]
   for = "/*.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
-
-# ── CACHE: robots y sitemap ───────────────────────────────
-[[headers]]
-  for = "/robots.txt"
-  [headers.values]
-    Cache-Control = "public, max-age=86400"
-
-[[headers]]
-  for = "/sitemap.xml"
-  [headers.values]
-    Cache-Control = "public, max-age=86400"
-
-# ── REDIRECTS ────────────────────────────────────────────
-[[redirects]]
-  from = "/admin"
-  to = "/admin.html"
-  status = 200
-
-[[redirects]]
-  from = "/login"
-  to = "/login.html"
-  status = 200

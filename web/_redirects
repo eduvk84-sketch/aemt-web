@@ -1,0 +1,6 @@
+# AEMT · redirecciones (Netlify). El panel antiguo ya no existe: la Junta entra por Magestro.
+https://www.aemtkd.es/*  https://aemtkd.es/:splat  301!
+/admin        https://magestro.es/login  301!
+/admin.html   https://magestro.es/login  301!
+/login        https://magestro.es/login  301!
+/login.html   https://magestro.es/login  301!

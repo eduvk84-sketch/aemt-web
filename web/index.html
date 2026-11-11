@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es" class="sin-js">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AEMT · Asociación Española de Masters de Taekwondo</title>
+<meta name="description" content="La asociación de los practicantes de taekwondo de 35 años en adelante en España: competiciones privadas por categorías de edad, Ranking AEMT, expediciones internacionales y formación. Asociación en constitución.">
+<meta name="theme-color" content="#0B1A31">
+<link rel="canonical" href="https://aemtkd.es/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/img/icono-180.png">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_ES">
+<meta property="og:site_name" content="AEMT">
+<meta property="og:url" content="https://aemtkd.es/">
+<meta property="og:title" content="AEMT · Asociación Española de Masters de Taekwondo">
+<meta property="og:description" content="Donde la experiencia se convierte en excelencia. Taekwondo Master para mayores de 35 años en toda España.">
+<meta property="og:image" content="https://aemtkd.es/assets/img/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="/assets/fonts/bebas-neue-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" as="image" href="/assets/img/patada-2000.webp" media="(min-width: 721px)">
+<link rel="stylesheet" href="/assets/css/aemt.css?v=2026-11-11">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SportsOrganization",
+  "name": "Asociación Española de Masters de Taekwondo",
+  "alternateName": "AEMT",
+  "url": "https://aemtkd.es/",
+  "logo": "https://aemtkd.es/assets/img/emblema.svg",
+  "sport": "Taekwondo",
+  "areaServed": "ES",
+  "address": { "@type": "PostalAddress", "streetAddress": "C/ Alcalá de Guadaira, 10, local 1", "postalCode": "28018", "addressLocality": "Madrid", "addressCountry": "ES" }
+}
+</script>
+</head>
+<body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<!-- Emblema (se reutiliza en la cabecera, la junta y el pie) -->
+<svg class="sprite" width="0" height="0" aria-hidden="true">
+  <defs>
+    <linearGradient id="oro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0C766"/><stop offset=".55" stop-color="#C8942A"/><stop offset="1" stop-color="#9C6E17"/></linearGradient>
+    <path id="arco-emblema" d="M100 100 m-72 0 a72 72 0 1 1 144 0 a72 72 0 1 1 -144 0"/>
+  </defs>
+  <symbol id="emblema" viewBox="0 0 200 200">
+    <circle cx="100" cy="100" r="96" fill="#0D1E38"/>
+    <circle cx="100" cy="100" r="92" fill="none" stroke="url(#oro)" stroke-width="3"/>
+    <circle cx="100" cy="100" r="58" fill="none" stroke="url(#oro)" stroke-width="1.2" opacity=".55"/>
+    <text font-family="Outfit, sans-serif" font-size="11.5" font-weight="600" letter-spacing="4.2" fill="#E8B84B"><textPath href="#arco-emblema" startOffset="50%" text-anchor="middle">MASTERS · TAEKWONDO · ESPAÑA · MMXXVI ·</textPath></text>
+    <path d="M56 118 C 74 70, 128 62, 146 92" fill="none" stroke="url(#oro)" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="146" cy="92" r="5" fill="#F0C766"/>
+    <text x="100" y="128" text-anchor="middle" font-family="'Bebas Neue', Impact, sans-serif" font-size="44" letter-spacing="3" fill="#FFFFFF">AEMT</text>
+  </symbol>
+  <symbol id="i-flecha" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6M12 7.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</svg>
+
+<header class="cabecera" id="cabecera">
+  <div class="contenedor cabecera__in">
+    <a class="marca" href="#inicio" aria-label="AEMT, inicio">
+      <svg aria-hidden="true"><use href="#emblema"/></svg>
+      <span class="marca__texto"><span class="marca__siglas">AEMT</span><span class="marca__nombre">Masters de Taekwondo</span></span>
+    </a>
+    <nav class="menu" id="menu" aria-label="Principal">
+      <a href="#asociacion">La asociación</a>
+      <a href="#actividad">Qué hacemos</a>
+      <a href="#categorias">Categorías</a>
+      <a href="#abonate">Hazte abonado</a>
+      <a href="#constitucion">Transparencia</a>
+      <a href="#contacto">Contacto</a>
+      <a class="boton" href="#abonate">Solicitar la adhesión</a>
+    </nav>
+    <a class="boton cabecera__accion" href="#abonate">Hazte abonado</a>
+    <button class="hamburguesa" id="hamburguesa" aria-label="Abrir el menú" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<main id="contenido">
+
+  <!-- ═════════ PORTADA ═════════ -->
+  <section class="portada" id="inicio" aria-labelledby="titulo-portada">
+    <picture class="portada__foto">
+      <source media="(max-width: 720px)" srcset="/assets/img/patada-1100.webp" type="image/webp">
+      <source media="(max-width: 720px)" srcset="/assets/img/patada-1100.jpg">
+      <source srcset="/assets/img/patada-2000.webp" type="image/webp">
+      <img src="/assets/img/patada-2000.jpg" alt="Taekwondista adulto con dobok y cinturón negro ejecutando una patada en salto en un dojang" width="2000" height="1330" fetchpriority="high">
+    </picture>
+    <div class="contenedor portada__in">
+      <span class="estado"><i aria-hidden="true"></i>Asociación en constitución · Madrid, 2026</span>
+      <h1 id="titulo-portada">
+        <span class="linea"><span>Donde la experiencia</span></span>
+        <span class="linea"><span>se convierte</span></span>
+        <span class="linea"><span>en <em>excelencia</em></span></span>
+      </h1>
+      <p class="portada__sub">Reunimos a quienes practican taekwondo <strong>a partir de los 35 años</strong> en toda España para competir, entrenar, viajar y seguir creciendo dentro y fuera del tapiz.</p>
+      <div class="acciones">
+        <a class="boton" href="#abonate">Solicitar la adhesión <svg aria-hidden="true"><use href="#i-flecha"/></svg></a>
+        <a class="boton boton--linea" href="#asociacion">Conocer la AEMT</a>
+      </div>
+      <div class="datos">
+        <div class="dato"><b>+35</b><span>Categoría Master: por edad, desde los 35 años</span></div>
+        <div class="dato"><b>Nacional</b><span>Practicantes de todas las comunidades</span></div>
+        <div class="dato"><b>Sin lucro</b><span>Todo lo que entra vuelve a la actividad</span></div>
+      </div>
+    </div>
+    <a class="flecha-abajo" href="#asociacion" aria-label="Bajar a «La asociación»"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </section>
+
+  <div class="cinta" aria-hidden="true">
+    <div class="cinta__pista">
+      <span>Respeto</span><span>Disciplina</span><span>Esfuerzo</span><span>Superación</span><span>Espíritu deportivo</span><span>Salud</span><span>Compañerismo</span>
+      <span>Respeto</span><span>Disciplina</span><span>Esfuerzo</span><span>Superación</span><span>Espíritu deportivo</span><span>Salud</span><span>Compañerismo</span>
+    </div>
+  </div>
+
+  <!-- ═════════ LA ASOCIACIÓN ═════════ -->
+  <section class="seccion" id="asociacion" aria-labelledby="titulo-asociacion">
+    <div class="contenedor asociacion">
+      <figure class="asociacion__foto revelar">
+        <picture>
+          <source media="(max-width: 860px)" srcset="/assets/img/cinturon-900.webp" type="image/webp">
+          <source srcset="/assets/img/cinturon-1600.webp" type="image/webp">
+          <img src="/assets/img/cinturon-1600.jpg" alt="Manos ajustando un cinturón negro sobre el uniforme blanco" width="1600" height="1067" loading="lazy">
+        </picture>
+        <figcaption><b>El cinturón negro no es el final.</b> Es el principio de una práctica que dura toda la vida.</figcaption>
+      </figure>
+      <div>
+        <span class="antetitulo revelar">La asociación</span>
+        <h2 class="titulo revelar" id="titulo-asociacion">La categoría Master, <em>con voz propia</em></h2>
+        <p class="cita revelar" data-retraso="1">Competir, formarse y proyectarse al mundo con la experiencia que dan los años.</p>
+        <p class="revelar" data-retraso="2">La AEMT es una asociación sin ánimo de lucro de ámbito nacional, constituida al amparo de la Ley Orgánica 1/2002, del Derecho de Asociación. Nace en Madrid en 2026 para agrupar, representar y dar actividad a los practicantes de taekwondo de la categoría Master y veteranos.</p>
+        <p class="revelar" data-retraso="2">Organizamos actividades privadas y no oficiales: no sustituimos a las federaciones ni a sus campeonatos, los complementamos con un circuito pensado para quienes siguen en el tapiz después de los 35.</p>
+        <ul class="fines">
+          <li class="revelar" data-retraso="1"><b>01</b><span>Promover el taekwondo Master: salud, competición, compañerismo y superación personal.</span></li>
+          <li class="revelar" data-retraso="2"><b>02</b><span>Organizar competiciones, expediciones y formación de carácter privado.</span></li>
+          <li class="revelar" data-retraso="3"><b>03</b><span>Fomentar la actividad física saludable a partir de los 35 años y la igualdad de oportunidades.</span></li>
+          <li class="revelar" data-retraso="4"><b>04</b><span>Colaborar con asociaciones y equipos Master de otros países.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ QUÉ HACEMOS ═════════ -->
+  <section class="seccion oscuro" id="actividad" aria-labelledby="titulo-actividad">
+    <div class="contenedor">
+      <div class="cabeza">
+        <div>
+          <span class="antetitulo revelar">Qué hacemos</span>
+          <h2 class="titulo revelar" id="titulo-actividad">Un circuito <em>a la medida</em> del practicante veterano</h2>
+        </div>
+        <p class="entradilla revelar" data-retraso="1">Seis líneas de trabajo para que la experiencia tenga dónde medirse, aprender y disfrutar.</p>
+      </div>
+      <div class="tarjetas">
+        <article class="tarjeta tarjeta--destacada revelar">
+          <span class="tarjeta__num">01</span>
+          <div class="tarjeta__icono"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v4a4 4 0 0 1-8 0V4zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 12v4M9 20h6M10 16h4v4h-4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div>
+          <h3>Competición</h3>
+          <p>Torneos y ligas por categorías de edad, con árbitros titulados y el reglamento de World Taekwondo adaptado a la categoría Master.</p>
+        </article>
+        <article class="tarjeta revelar" data-retraso="1">
+          <span class="tarjeta__num">02</span>
+          <div class="tarjeta__icono"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
+          <h3>Ranking AEMT</h3>
+          <p>Una clasificación propia por puntos en cada categoría, que se alimenta con los resultados de los eventos puntuables.</p>
+        </article>
+        <article class="tarjeta revelar" data-retraso="2">
+          <span class="tarjeta__num">03</span>
+          <div class="tarjeta__icono"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></div>
+          <h3>Expediciones</h3>
+          <p>Viajes en equipo a torneos Master internacionales: inscripción conjunta, logística y acompañamiento técnico.</p>
+        </article>
+        <article class="tarjeta revelar" data-retraso="1">
+          <span class="tarjeta__num">04</span>
+          <div class="tarjeta__icono"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4-9-4zM7 9v5c0 1.7 2.2 3 5 3s5-1.3 5-3V9M21 7v6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/></svg></div>
+          <h3>Formación</h3>
+          <p>Seminarios y campus con maestros de referencia: técnica, poomsae, combate y preparación física para veteranos.</p>
+        </article>
+        <article class="tarjeta revelar" data-retraso="2">
+          <span class="tarjeta__num">05</span>
+          <div class="tarjeta__icono"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M7.5 12h2.5l1.2-2.2 1.8 4 1.2-1.8h2.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Salud</h3>
+          <p>Práctica adaptada a cada edad, prevención de lesiones y actividad física para una vida larga y activa.</p>
+        </article>
+        <article class="tarjeta revelar" data-retraso="3">
+          <span class="tarjeta__num">06</span>
+          <div class="tarjeta__icono"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="17" cy="9.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5M14.5 14.6c2.6-.6 5.2.7 6 4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <h3>Comunidad</h3>
+          <p>Practicantes de todo el país que comparten tapiz, viaje y sobremesa. Delegaciones territoriales a medida que crezcamos.</p>
+        </article>
+      </div>
+      <p class="nota-privada revelar"><svg aria-hidden="true"><use href="#i-info"/></svg>Las actividades de la AEMT son privadas y no oficiales. Sus títulos y clasificaciones no son federativos ni suponen la representación oficial de España.</p>
+    </div>
+  </section>
+
+  <!-- ═════════ CATEGORÍAS ═════════ -->
+  <section class="seccion marfil" id="categorias" aria-labelledby="titulo-categorias">
+    <div class="contenedor">
+      <div class="cabeza">
+        <div>
+          <span class="antetitulo revelar">Categorías</span>
+          <h2 class="titulo revelar" id="titulo-categorias">Se compite <em>con los de tu edad</em></h2>
+        </div>
+        <p class="entradilla revelar" data-retraso="1">Así lo fija el Reglamento de Competición de la AEMT. La edad cuenta a 1 de enero del año de la competición.</p>
+      </div>
+      <div class="categorias">
+        <div class="categoria revelar"><b>Sub-Master</b><span>De 25 a 34 años · acceso al circuito</span></div>
+        <div class="categoria categoria--oro revelar" data-retraso="1"><b>Master 35</b><span>De 35 a 39 años</span></div>
+        <div class="categoria revelar" data-retraso="2"><b>Master 40</b><span>De 40 a 44 años</span></div>
+        <div class="categoria revelar" data-retraso="3"><b>Master 45</b><span>De 45 a 49 años</span></div>
+        <div class="categoria revelar"><b>Master 50</b><span>De 50 a 54 años</span></div>
+        <div class="categoria revelar" data-retraso="1"><b>Master 55</b><span>De 55 a 59 años</span></div>
+        <div class="categoria revelar" data-retraso="2"><b>Master 60+</b><span>Desde los 60 años</span></div>
+        <div class="categoria categoria--oro revelar" data-retraso="3"><b>Femenino</b><span>Desde los 35 · unificada o por grupos de edad</span></div>
+      </div>
+      <div class="reglas">
+        <p class="regla revelar"><svg aria-hidden="true"><use href="#i-check"/></svg>Para competir: ser abonado, tener licencia federativa en vigor y seguro de accidentes deportivos.</p>
+        <p class="regla revelar" data-retraso="1"><svg aria-hidden="true"><use href="#i-check"/></svg>Si en una categoría hay menos de tres participantes, la organización puede unirla con otra.</p>
+        <p class="regla revelar" data-retraso="2"><svg aria-hidden="true"><use href="#i-check"/></svg>Árbitros titulados por la Real Federación Española o por las federaciones autonómicas.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ HAZTE ABONADO ═════════ -->
+  <section class="seccion oscuro abonado" id="abonate" aria-labelledby="titulo-abonate">
+    <div class="abonado__fondo" aria-hidden="true"><img src="/assets/img/pabellon.jpg" alt="" loading="lazy"></div>
+    <div class="contenedor">
+      <div class="cabeza">
+        <div>
+          <span class="antetitulo revelar">Hazte abonado</span>
+          <h2 class="titulo revelar" id="titulo-abonate">Súmate a la <em>primera temporada</em></h2>
+        </div>
+        <p class="entradilla revelar" data-retraso="1">Los abonados participan en los eventos, el Ranking y las expediciones de la AEMT. Elige tu modalidad y envía tu solicitud: tarda dos minutos.</p>
+      </div>
+
+      <div class="cuotas">
+        <article class="cuota cuota--estrella revelar">
+          <span class="sello">La más habitual</span>
+          <h3>Estándar</h3>
+          <div class="cuota__precio">60 €<small>al año</small></div>
+          <p>Para mayores de 18 años que practican o han practicado taekwondo.</p>
+        </article>
+        <article class="cuota revelar" data-retraso="1">
+          <h3>Joven</h3>
+          <div class="cuota__precio">60 €<small>al año</small></div>
+          <p>De 14 a 25 años. Los menores de 18 necesitan la autorización de su madre, padre o tutor.</p>
+        </article>
+        <article class="cuota revelar" data-retraso="2">
+          <h3>Colaborador</h3>
+          <div class="cuota__precio">60 €<small>al año</small></div>
+          <p>Personas o entidades que quieren apoyar los fines de la asociación.</p>
+        </article>
+        <article class="cuota revelar" data-retraso="3">
+          <h3>Honorífico</h3>
+          <div class="cuota__precio">Exento</div>
+          <p>Personas de reconocido mérito, a propuesta de la Junta Directiva y ratificadas por la Asamblea.</p>
+        </article>
+      </div>
+
+      <div class="pasos">
+        <div class="paso revelar"><h4>Envías tu solicitud</h4><p>Con tus datos básicos, en el formulario seguro de la asociación.</p></div>
+        <div class="paso revelar" data-retraso="1"><h4>La Junta la revisa</h4><p>Responde en un plazo máximo de 15 días hábiles, como dicen los Estatutos.</p></div>
+        <div class="paso revelar" data-retraso="2"><h4>Te damos de alta</h4><p>Recibes la confirmación y, cuando toque, la forma de pago de la cuota.</p></div>
+      </div>
+
+      <p class="aviso-cuota revelar"><svg aria-hidden="true"><use href="#i-info"/></svg><span><strong>Ahora no se cobra nada.</strong> La AEMT está terminando su inscripción en el Registro Nacional de Asociaciones. Recogemos ya las solicitudes y avisaremos antes de cobrar la primera cuota, cuando la asociación tenga su cuenta bancaria.</span></p>
+
+      <div class="acciones revelar">
+        <a class="boton" id="enlace-adhesion" href="https://magestro.es/registro/asociacion-espanola-de-masters-de-taekwondo-aemt" rel="noopener">Solicitar la adhesión <svg aria-hidden="true"><use href="#i-flecha"/></svg></a>
+        <a class="boton boton--linea" href="#contacto">Tengo dudas</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ TRANSPARENCIA ═════════ -->
+  <section class="seccion" id="constitucion" aria-labelledby="titulo-constitucion">
+    <div class="contenedor">
+      <div class="cabeza">
+        <div>
+          <span class="antetitulo revelar">Transparencia</span>
+          <h2 class="titulo revelar" id="titulo-constitucion">Así vamos con <em>la constitución</em></h2>
+        </div>
+        <p class="entradilla revelar" data-retraso="1">Contamos cada paso. Esta línea se actualiza a medida que se completan los trámites.</p>
+      </div>
+      <ol class="camino">
+        <li class="hito hito--hecho revelar">
+          <span class="hito__punto"><svg aria-hidden="true"><use href="#i-check"/></svg></span>
+          <h4>Estatutos y acta</h4>
+          <p>Redactados con sus reglamentos de régimen interno y de competición.</p>
+          <small>Hecho</small>
+        </li>
+        <li class="hito hito--ahora revelar" data-retraso="1">
+          <span class="hito__punto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16l-1 4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+          <h4>Firma de los fundadores</h4>
+          <p>Los cuatro socios fundadores firman el acta y los estatutos.</p>
+          <small>En curso</small>
+        </li>
+        <li class="hito revelar" data-retraso="2">
+          <span class="hito__punto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16M6 9v9M10 9v9M14 9v9M18 9v9M3 20h18M12 3l9 4H3l9-4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+          <h4>Registro Nacional</h4>
+          <p>Inscripción en el Registro Nacional de Asociaciones del Ministerio del Interior.</p>
+          <small>Siguiente</small>
+        </li>
+        <li class="hito revelar" data-retraso="3">
+          <span class="hito__punto"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 10h6M7 14h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+          <h4>NIF</h4>
+          <p>Número de identificación fiscal de la asociación ante la Agencia Tributaria.</p>
+          <small>Pendiente</small>
+        </li>
+        <li class="hito revelar" data-retraso="4">
+          <span class="hito__punto"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18" stroke="currentColor" stroke-width="1.7"/></svg></span>
+          <h4>Cuenta bancaria</h4>
+          <p>A nombre de la AEMT. A partir de aquí se cobran las cuotas.</p>
+          <small>Pendiente</small>
+        </li>
+      </ol>
+      <div class="junta revelar">
+        <svg aria-hidden="true"><use href="#emblema"/></svg>
+        <div>
+          <h3>Junta Directiva provisional</h3>
+          <p>Formada por los <strong>cuatro socios fundadores</strong> hasta la primera Asamblea General Ordinaria. Preside <strong>Eduardo Lozano Moreno</strong>. Las cuentas y la memoria de actividades se publicarán cada año.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════ CONTACTO ═════════ -->
+  <section class="seccion oscuro" id="contacto" aria-labelledby="titulo-contacto">
+    <div class="contenedor contacto">
+      <div>
+        <span class="antetitulo revelar">Contacto</span>
+        <h2 class="titulo revelar" id="titulo-contacto">¿Hablamos?</h2>
+        <p class="entradilla revelar" data-retraso="1">Dudas sobre la adhesión, propuestas de eventos, patrocinio o colaboración: escríbenos y te respondemos.</p>
+        <div class="contacto__datos">
+          <div class="contacto__dato revelar"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></span><div><b>Domicilio social</b><div>C/ Alcalá de Guadaira, 10, local 1<br>28018 Madrid</div></div></div>
+          <div class="contacto__dato revelar" data-retraso="1"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><div><b>Teléfono</b><a href="tel:+34625593998">+34 625 59 39 98</a></div></div>
+          <div class="contacto__dato revelar" data-retraso="2"><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><div><b>Respuesta</b><div>En menos de 48 horas laborables</div></div></div>
+        </div>
+      </div>
+
+      <form class="formulario revelar" data-retraso="1" name="contacto" method="POST" action="/gracias.html" data-netlify="true" netlify-honeypot="web">
+        <input type="hidden" name="form-name" value="contacto">
+        <p class="oculto"><label>No rellenes este campo <input name="web" tabindex="-1" autocomplete="off"></label></p>
+        <div class="fila">
+          <div class="campo"><label for="c-nombre">Nombre</label><input id="c-nombre" name="nombre" required maxlength="100" autocomplete="name"></div>
+          <div class="campo"><label for="c-correo">Correo</label><input id="c-correo" name="correo" type="email" required maxlength="160" autocomplete="email"></div>
+        </div>
+        <div class="campo">
+          <label for="c-asunto">Asunto</label>
+          <select id="c-asunto" name="asunto">
+            <option>Información sobre la adhesión</option>
+            <option>Competición y eventos</option>
+            <option>Expediciones internacionales</option>
+            <option>Patrocinio o colaboración</option>
+            <option>Prensa</option>
+            <option>Otra consulta</option>
+          </select>
+        </div>
+        <div class="campo"><label for="c-mensaje">Mensaje</label><textarea id="c-mensaje" name="mensaje" required maxlength="3000"></textarea></div>
+        <label class="casilla"><input type="checkbox" name="acepta_privacidad" value="si" required><span>He leído la <a href="/privacidad.html">política de privacidad</a> y acepto que la AEMT use estos datos solo para responder a mi consulta.</span></label>
+        <button class="boton" type="submit">Enviar el mensaje <svg aria-hidden="true"><use href="#i-flecha"/></svg></button>
+        <p class="formulario__nota">No usamos tus datos para publicidad ni los cedemos a nadie.</p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="pie">
+  <div class="contenedor">
+    <div class="pie__arriba">
+      <div>
+        <a class="marca" href="#inicio" aria-label="AEMT, volver arriba">
+          <svg aria-hidden="true"><use href="#emblema"/></svg>
+          <span class="marca__texto"><span class="marca__siglas">AEMT</span><span class="marca__nombre">Masters de Taekwondo</span></span>
+        </a>
+        <p class="pie__lema">Donde la experiencia se convierte en excelencia</p>
+        <p>Asociación Española de Masters de Taekwondo · Entidad sin ánimo de lucro en constitución (Ley Orgánica 1/2002) · C/ Alcalá de Guadaira, 10, local 1, 28018 Madrid.</p>
+      </div>
+      <div>
+        <h4>La AEMT</h4>
+        <ul>
+          <li><a href="#asociacion">La asociación</a></li>
+          <li><a href="#actividad">Qué hacemos</a></li>
+          <li><a href="#categorias">Categorías</a></li>
+          <li><a href="#abonate">Hazte abonado</a></li>
+          <li><a href="#constitucion">Transparencia</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Información legal</h4>
+        <ul>
+          <li><a href="/aviso-legal.html">Aviso legal</a></li>
+          <li><a href="/privacidad.html">Privacidad y cookies</a></li>
+          <li><a href="/aviso-legal.html#creditos">Créditos de las fotografías</a></li>
+          <li><a href="https://magestro.es/login" rel="noopener">Acceso de la Junta</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="pie__abajo">
+      <p>© <span id="anio">2026</span> AEMT · Asociación Española de Masters de Taekwondo</p>
+      <p>Esta web no usa cookies ni herramientas de seguimiento.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/js/aemt.js?v=2026-11-11" defer></script>
+</body>
+</html>
