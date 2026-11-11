@@ -12,3 +12,6 @@ Thumbs.db
 
 # Local Netlify folder
 .netlify
+
+# Documentos de trámites (llevan datos de los fundadores)
+/AEMT_*.pdf

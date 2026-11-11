@@ -7,10 +7,14 @@
 <meta name="description" content="La asociación de los practicantes de taekwondo de 30 años en adelante en España: competiciones privadas por categorías de edad, Ranking AEMT, expediciones internacionales y formación.">
 <meta name="theme-color" content="#0B1A31">
 <link rel="canonical" href="https://aemtkd.es/">
+<link rel="alternate" hreflang="es" href="https://aemtkd.es/">
+<link rel="alternate" hreflang="en" href="https://aemtkd.es/en/">
+<link rel="alternate" hreflang="x-default" href="https://aemtkd.es/">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/assets/img/icono-180.png">
 <meta property="og:type" content="website">
 <meta property="og:locale" content="es_ES">
+<meta property="og:locale:alternate" content="en_GB">
 <meta property="og:site_name" content="AEMT">
 <meta property="og:url" content="https://aemtkd.es/">
 <meta property="og:title" content="AEMT · Asociación Española de Masters de Taekwondo">
@@ -22,7 +26,7 @@
 <link rel="preload" href="/assets/fonts/bebas-neue-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/outfit-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" as="image" href="/assets/img/patada-2000.webp" media="(min-width: 721px)">
-<link rel="stylesheet" href="/assets/css/aemt.css?v=2026-11-12b">
+<link rel="stylesheet" href="/assets/css/aemt.css?v=2026-11-12c">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -57,10 +61,27 @@
   </symbol>
   <symbol id="i-flecha" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-mundo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="i-telefono" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-arriba" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6M12 7.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
 </svg>
 
 <header class="cabecera" id="cabecera">
+  <div class="franja">
+    <div class="contenedor franja__in">
+      <span class="franja__lema">Asociación Española de Masters de Taekwondo · Madrid</span>
+      <a class="franja__tel" href="tel:+34654823399"><svg aria-hidden="true"><use href="#i-telefono"/></svg>+34 654 82 33 99</a>
+      <div class="idiomas">
+        <svg class="idiomas__icono" aria-hidden="true"><use href="#i-mundo"/></svg>
+        <span class="idiomas__texto" id="etq-idioma">Idioma</span>
+        <nav class="idiomas__pastilla" aria-labelledby="etq-idioma">
+          <a href="/" hreflang="es" lang="es" aria-current="true" title="Español">ES</a>
+          <a href="/en/" hreflang="en" lang="en" title="English version" data-otro-idioma>EN</a>
+        </nav>
+      </div>
+    </div>
+  </div>
   <div class="contenedor cabecera__in">
     <a class="marca" href="#inicio" aria-label="AEMT, inicio">
       <svg aria-hidden="true"><use href="#emblema"/></svg>
@@ -78,6 +99,7 @@
     <a class="boton cabecera__accion" href="#abonate">Hazte abonado</a>
     <button class="hamburguesa" id="hamburguesa" aria-label="Abrir el menú" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
   </div>
+  <div class="progreso" aria-hidden="true"></div>
 </header>
 
 <main id="contenido">
@@ -99,11 +121,11 @@
       </h1>
       <p class="portada__sub">Reunimos a quienes practican taekwondo <strong>a partir de los 30 años</strong> en toda España para competir, entrenar, viajar y seguir creciendo dentro y fuera del tapiz.</p>
       <div class="acciones">
-        <a class="boton" href="#abonate">Solicitar la adhesión <svg aria-hidden="true"><use href="#i-flecha"/></svg></a>
+        <a class="boton boton--brillo" href="#abonate">Solicitar la adhesión <svg aria-hidden="true"><use href="#i-flecha"/></svg></a>
         <a class="boton boton--linea" href="#asociacion">Conocer la AEMT</a>
       </div>
       <div class="datos">
-        <div class="dato"><b>+30</b><span>Categoría Master: por edad, desde los 30 años</span></div>
+        <div class="dato"><b data-contar="30" data-prefijo="+">+30</b><span>Categoría Master: por edad, desde los 30 años</span></div>
         <div class="dato"><b>Nacional</b><span>Practicantes de todas las comunidades</span></div>
         <div class="dato"><b>Sin lucro</b><span>Todo lo que entra vuelve a la actividad</span></div>
       </div>
@@ -121,7 +143,7 @@
   <!-- ═════════ LA ASOCIACIÓN ═════════ -->
   <section class="seccion" id="asociacion" aria-labelledby="titulo-asociacion">
     <div class="contenedor asociacion">
-      <figure class="asociacion__foto revelar">
+      <figure class="asociacion__foto revelar revelar--cortina">
         <picture>
           <source media="(max-width: 860px)" srcset="/assets/img/cinturon-900.webp" type="image/webp">
           <source srcset="/assets/img/cinturon-1600.webp" type="image/webp">
@@ -310,16 +332,25 @@
         </article>
       </div>
 
-      <div class="pasos">
-        <div class="paso revelar"><h4>Envías tu solicitud</h4><p>Con tus datos básicos, en el formulario seguro de la asociación.</p></div>
-        <div class="paso revelar" data-retraso="1"><h4>La revisamos</h4><p>Te respondemos en un plazo máximo de 15 días hábiles.</p></div>
-        <div class="paso revelar" data-retraso="2"><h4>Te damos de alta</h4><p>Recibes la confirmación y, cuando toque, la forma de pago de la cuota.</p></div>
+      <div class="alta-diploma">
+        <div class="pasos pasos--cuatro">
+          <div class="paso revelar"><h4>Envías tu solicitud</h4><p>Con tus datos básicos, en el formulario seguro de la asociación.</p></div>
+          <div class="paso revelar" data-retraso="1"><h4>La revisamos</h4><p>Te respondemos en un plazo máximo de 15 días hábiles.</p></div>
+          <div class="paso revelar" data-retraso="2"><h4>Te damos de alta</h4><p>Recibes la confirmación y, cuando toque, la forma de pago de la cuota.</p></div>
+          <div class="paso paso--oro revelar" data-retraso="3"><h4>Recibes tu diploma</h4><p>Tu diploma de miembro llega a tu correo: en PDF para imprimirlo y en imagen para compartirlo en redes.</p></div>
+        </div>
+        <figure class="diploma-muestra revelar" data-retraso="2">
+          <div class="diploma-muestra__marco" data-inclinar>
+            <img src="/assets/img/diploma-muestra.jpg" alt="Muestra del diploma de miembro de la AEMT: marco coreano tradicional, 태권도 en caligrafía, sello rojo y los cinco principios del taekwondo" width="1200" height="848" loading="lazy">
+          </div>
+          <figcaption>Tu diploma de miembro, con tu nombre y tu número. Diseño coreano tradicional con sello de España.</figcaption>
+        </figure>
       </div>
 
       <p class="aviso-cuota revelar"><svg aria-hidden="true"><use href="#i-info"/></svg><span><strong>Ahora no se cobra nada.</strong> Recogemos ya las solicitudes y te avisaremos antes de cobrar la primera cuota.</span></p>
 
       <div class="acciones revelar">
-        <a class="boton" id="enlace-adhesion" href="https://magestro.es/registro/asociacion-espanola-de-masters-de-taekwondo-aemt" rel="noopener">Solicitar la adhesión <svg aria-hidden="true"><use href="#i-flecha"/></svg></a>
+        <a class="boton boton--brillo" id="enlace-adhesion" href="https://magestro.es/registro/asociacion-espanola-de-masters-de-taekwondo-aemt" rel="noopener">Solicitar la adhesión <svg aria-hidden="true"><use href="#i-flecha"/></svg></a>
         <a class="boton boton--linea" href="#contacto">Tengo dudas</a>
       </div>
     </div>
@@ -334,7 +365,7 @@
         <p class="entradilla revelar" data-retraso="1">Dudas sobre la adhesión, propuestas de eventos, patrocinio o colaboración: escríbenos y te respondemos.</p>
         <div class="contacto__datos">
           <div class="contacto__dato revelar"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg></span><div><b>Domicilio social</b><div>C/ Alcalá de Guadaira, 10, local 1<br>28018 Madrid</div></div></div>
-          <div class="contacto__dato revelar" data-retraso="1"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><div><b>Teléfono</b><a href="tel:+34625593998">+34 625 59 39 98</a></div></div>
+          <div class="contacto__dato revelar" data-retraso="1"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span><div><b>Teléfono</b><a href="tel:+34654823399">+34 654 82 33 99</a></div></div>
           <div class="contacto__dato revelar" data-retraso="2"><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span><div><b>Respuesta</b><div>En menos de 48 horas laborables</div></div></div>
         </div>
       </div>
@@ -404,6 +435,8 @@
   </div>
 </footer>
 
-<script src="/assets/js/aemt.js?v=2026-11-12b" defer></script>
+<a class="subir" id="subir" href="#inicio" aria-label="Volver arriba"><svg aria-hidden="true"><use href="#i-arriba"/></svg></a>
+
+<script src="/assets/js/aemt.js?v=2026-11-12c" defer></script>
 </body>
 </html>
