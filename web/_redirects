@@ -5,6 +5,6 @@ https://www.aemtkd.es/*  https://aemtkd.es/:splat  301!
 /login        https://magestro.es/login  301!
 /login.html   https://magestro.es/login  301!
 
-# Área del abonado (entrada de Magestro con la imagen de la AEMT). 302: el destino puede cambiar.
-/abonados     https://magestro.es/acceso/asociacion-espanola-de-masters-de-taekwondo-aemt  302!
-/abonados/    https://magestro.es/acceso/asociacion-espanola-de-masters-de-taekwondo-aemt  302!
+# Área del abonado: abonados.aemtkd.es (Magestro con la imagen de la AEMT). 302: el destino puede cambiar.
+/abonados     https://abonados.aemtkd.es  302!
+/abonados/    https://abonados.aemtkd.es  302!

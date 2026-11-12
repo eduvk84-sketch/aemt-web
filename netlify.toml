@@ -54,7 +54,7 @@
 # ── Área del abonado: entrada de Magestro con la imagen de la AEMT ──
 [[redirects]]
   from = "/abonados"
-  to = "https://magestro.es/acceso/asociacion-espanola-de-masters-de-taekwondo-aemt"
+  to = "https://abonados.aemtkd.es"
   status = 302
   force = true
 
