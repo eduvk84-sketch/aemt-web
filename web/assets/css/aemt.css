@@ -130,8 +130,15 @@ a { color: inherit; }
 }
 .idiomas__pastilla a[aria-current="true"] { background: linear-gradient(140deg, #F0C766, #C8942A); color: var(--azul-950); }
 .idiomas__pastilla a:not([aria-current]):hover { color: #fff; background: rgba(255,255,255,.12); }
+.franja__area {
+  display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; font-weight: 600; color: var(--oro-claro) !important;
+  padding: .15rem .7rem; border-radius: 999px; border: 1px solid rgba(232,184,75,.35); transition: background .25s, color .25s;
+}
+.franja__area:hover { background: rgba(232,184,75,.14); color: #fff !important; }
+.franja__area .corto { display: none; }
 @media (max-width: 900px) { .franja__lema { display: none; } .franja__tel { margin-right: auto; } }
-@media (max-width: 380px) { .idiomas__texto { display: none; } }
+@media (max-width: 620px) { .idiomas__texto { display: none; } .franja__area .largo { display: none; } .franja__area .corto { display: inline; } .franja__in { gap: .8rem; } }
+@media (max-width: 360px) { .franja__tel svg { display: none; } }
 
 /* Barra de lectura (cuánto queda de página) */
 .progreso {
@@ -193,7 +200,7 @@ a { color: inherit; }
   .menu .boton { margin-top: 1rem; border-bottom: 0; }
 }
 @media (min-width: 1101px) {
-  .menu .boton { display: none; }
+  .menu .boton, .menu .menu__area { display: none; }
   /* «Hazte abonado» ya está en el botón dorado de la cabecera */
   .menu a[href="#abonate"], .menu a[href="#join"] { display: none; }
 }
@@ -419,6 +426,8 @@ section[id] { scroll-margin-top: var(--franja); }
 @media (max-width: 960px) { .alta-diploma { grid-template-columns: 1fr; } .diploma-muestra__marco { transform: none; } }
 @media (max-width: 600px) { .pasos--cuatro { grid-template-columns: 1fr; } }
 
+.ya-abonado { margin: 1.6rem 0 0; color: rgba(255,255,255,.72); font-size: .95rem; }
+.ya-abonado a { color: var(--oro-claro); font-weight: 600; }
 .aviso-cuota { display: flex; gap: .9rem; align-items: flex-start; background: rgba(232,184,75,.1); border: 1px solid rgba(232,184,75,.35); border-radius: 14px; padding: 1rem 1.2rem; color: rgba(255,255,255,.85); font-size: .95rem; margin-bottom: 2.2rem; }
 .aviso-cuota svg { width: 22px; height: 22px; flex: none; color: var(--oro-claro); }
 @media (max-width: 1020px) { .cuotas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

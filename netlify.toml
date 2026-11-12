@@ -51,6 +51,13 @@
   status = 301
   force = true
 
+# ── Área del abonado: entrada de Magestro con la imagen de la AEMT ──
+[[redirects]]
+  from = "/abonados"
+  to = "https://magestro.es/acceso/asociacion-espanola-de-masters-de-taekwondo-aemt"
+  status = 302
+  force = true
+
 # ── Cabeceras de seguridad (todas las páginas) ────────────────
 # Todo se sirve desde la propia web: ni fuentes, ni scripts, ni
 # analítica de terceros. El único destino externo es Magestro.
